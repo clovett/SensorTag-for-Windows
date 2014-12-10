@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/2010/manifest" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest">
+  <Identity Name="A3E4EFB7-5824-4A1E-92C4-0F3FDEAF4635" Publisher="CN=clovett" Version="1.0.0.0" />
+  <mp:PhoneIdentity PhoneProductId="66b33405-2617-4ac4-a62d-a3bb8f4d9fbf" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
+  <Properties>
+    <DisplayName>Sensor Tag</DisplayName>
+    <PublisherDisplayName>clovett</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+  <Prerequisites>
+    <OSMinVersion>6.3.1</OSMinVersion>
+    <OSMaxVersionTested>6.3.1</OSMaxVersionTested>
+  </Prerequisites>
+  <Resources>
+    <Resource Language="x-generate" />
+  </Resources>
+  <Applications>
+    <Application Id="xAA7D614ByD073y43DFy95A7yC4414ABB798Fx" Executable="$targetnametoken$.exe" EntryPoint="SensorTag.App">
+      <m3:VisualElements DisplayName="SensorTag" Description="Simple app demonstrating the Texas Instruments SensorTag device." BackgroundColor="#464646" ForegroundText="light" Square150x150Logo="Assets\Logo.png" Square44x44Logo="Assets\SmallLogo.png" xmlns:m3="http://schemas.microsoft.com/appx/2014/manifest">
+        <m3:DefaultTile Wide310x150Logo="Assets\WideLogo.png" Square71x71Logo="Assets\Logo71.png">
+        </m3:DefaultTile>
+        <m3:InitialRotationPreference>
+          <m3:Rotation Preference="portrait" />
+          <m3:Rotation Preference="portraitFlipped" />
+        </m3:InitialRotationPreference>
+        <m3:SplashScreen Image="Assets\SplashScreen.png" />
+      </m3:VisualElements>
+    </Application>
+  </Applications>
+  <Capabilities>
+    <Capability Name="internetClient" />
+    <m2:DeviceCapability Name="bluetooth.genericAttributeProfile">
+      <m2:Device Id="any">
+        <m2:Function Type="name:battery" />
+        <m2:Function Type="serviceId:f000aa00-0451-4000-b000-000000000000" />
+        <m2:Function Type="serviceId:f000aa10-0451-4000-b000-000000000000" />
+        <m2:Function Type="serviceId:f000aa20-0451-4000-b000-000000000000" />
+        <m2:Function Type="serviceId:f000aa30-0451-4000-b000-000000000000" />
+        <m2:Function Type="serviceId:f000aa40-0451-4000-b000-000000000000" />
+        <m2:Function Type="serviceId:f000aa50-0451-4000-b000-000000000000" />
+        <m2:Function Type="serviceId:0000ffe0-0000-1000-8000-00805f9b34fb" />
+        <m2:Function Type="serviceId:00001800-0000-1000-8000-00805f9b34fb" />
+        <m2:Function Type="serviceId:00001801-0000-1000-8000-00805f9b34fb" />
+        <m2:Function Type="serviceId:0000180A-0000-1000-8000-00805f9b34fb" />
+      </m2:Device>
+    </m2:DeviceCapability>
+  </Capabilities>
+</Package>

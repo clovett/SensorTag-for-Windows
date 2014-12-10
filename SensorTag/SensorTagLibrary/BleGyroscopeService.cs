@@ -1,0 +1,197 @@
+﻿using Microsoft.MobileLabs.Bluetooth;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Windows.Devices.Bluetooth.GenericAttributeProfile;
+using Windows.Devices.Enumeration;
+using Windows.Storage.Streams;
+using Buffer = Windows.Storage.Streams.Buffer;
+
+namespace SensorTag
+{
+    public enum GyroscopeAxes
+    {
+        X = 1,
+        Y = 2,
+        XY = 3,
+        Z = 4,
+        XZ = 5,
+        YZ = 6,
+        XYZ = 7
+    }
+
+    /// <summary>
+    /// This class provides access to the SensorTag Gyroscope BLE data
+    /// </summary>
+    public class BleGyroscopeService : BleGenericGattService
+    {
+
+        public BleGyroscopeService() 
+        {
+        }
+
+        static Guid GyroscopeServiceUuid = Guid.Parse("f000aa50-0451-4000-b000-000000000000");
+        static Guid GyroscopeCharacteristicUuid = Guid.Parse("f000aa51-0451-4000-b000-000000000000");
+        static Guid GyroscopeCharacteristicConfigUuid = Guid.Parse("f000aa52-0451-4000-b000-000000000000");
+        
+        Delegate _gyroscopeValueChanged;
+
+        public event EventHandler<GyroscopeMeasurementEventArgs> GyroscopeMeasurementValueChanged
+        {
+            add
+            {
+                if (_gyroscopeValueChanged != null)
+                {
+                    _gyroscopeValueChanged = Delegate.Combine(_gyroscopeValueChanged, value);
+                }
+                else
+                {
+                    _gyroscopeValueChanged = value;
+                    var nowait = RegisterForValueChangeEvents(GyroscopeCharacteristicUuid);
+                }
+            }
+            remove
+            {
+                if (_gyroscopeValueChanged != null)
+                {
+                    _gyroscopeValueChanged = Delegate.Remove(_gyroscopeValueChanged, value);
+                }
+                if (_gyroscopeValueChanged == null)
+                {
+                    var nowait = UnregisterForValueChangeEvents(GyroscopeCharacteristicUuid);
+                }
+            }
+        }
+
+        private async Task<int> GetConfig()
+        {
+            var ch = GetCharacteristic(GyroscopeCharacteristicConfigUuid);
+            if (ch != null)
+            {
+                var properties = ch.CharacteristicProperties;
+
+                if ((properties & GattCharacteristicProperties.Read) != 0)
+                {
+                    var result = await ch.ReadValueAsync();
+                    IBuffer buffer = result.Value;
+                    DataReader reader = DataReader.FromBuffer(buffer);
+                    var value = reader.ReadByte();
+                    Debug.WriteLine("Gyroscope config = " + value);
+                    return (int)value;
+                }
+            }
+            return -1;
+        }
+
+        /// <summary>
+        /// Enable getting GyroscopeMeasurementValueChanged events on the given axes.
+        /// The gyro produces new values about once per second and that period cannot be changed.
+        /// </summary>
+        /// <param name="enableAxes"></param>
+        public async void StartReading(GyroscopeAxes enableAxes)
+        {
+            byte value = (byte)enableAxes;
+            await WriteCharacteristicByte(GyroscopeCharacteristicConfigUuid, value);
+        }
+
+        public async void StopReading()
+        {
+            await WriteCharacteristicByte(GyroscopeCharacteristicConfigUuid, 0);
+        }
+        
+        private void OnGyroscopeMeasurementValueChanged(GyroscopeMeasurementEventArgs args)
+        {
+            if (_gyroscopeValueChanged != null)
+            {
+                ((EventHandler<GyroscopeMeasurementEventArgs>)_gyroscopeValueChanged)(this, args);
+            }
+        }
+
+
+        public async Task<bool> ConnectAsync()
+        {
+            return await this.ConnectAsync(GyroscopeServiceUuid, null);
+        }
+
+        protected override void OnCharacteristicValueChanged(GattCharacteristic sender, GattValueChangedEventArgs eventArgs)
+        {
+            if (sender.Uuid == GyroscopeCharacteristicUuid)
+            {
+                if (_gyroscopeValueChanged != null)
+                {
+                    uint dataLength = eventArgs.CharacteristicValue.Length;
+                    using (DataReader reader = DataReader.FromBuffer(eventArgs.CharacteristicValue))
+                    {
+                        if (dataLength == 6)
+                        {
+                            var data = new byte[dataLength];
+                            reader.ReadBytes(data);
+
+                            GyroscopeMeasurement measurement = new GyroscopeMeasurement();
+
+                            int x = (int)data[0] + ((sbyte)data[1] << 8); // upper byte is signed.
+                            int y = (int)data[2] + ((sbyte)data[3] << 8); // upper byte is signed.
+                            int z = (int)data[4] + ((sbyte)data[5] << 8); // upper byte is signed.
+
+                            measurement.X = ((double)x * 500.0) / 65536.0;
+                            measurement.Y = ((double)y * 500.0) / 65536.0;
+                            measurement.Z = ((double)z * 500.0) / 65536.0;
+
+                            OnGyroscopeMeasurementValueChanged(new GyroscopeMeasurementEventArgs(measurement, eventArgs.Timestamp));
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+
+    public class GyroscopeMeasurement
+    {
+        /// <summary>
+        /// Get/Set X twist in degrees per second.
+        /// </summary>
+        public double X { get; set;}   
+        
+        /// <summary>
+        /// Get/Set Y twist in degrees per second.
+        /// </summary>
+        public double Y { get; set;}        
+        
+        /// <summary>
+        /// Get/Set Z twist in degrees per second.
+        /// </summary>
+        public double Z { get; set;}
+
+        public GyroscopeMeasurement()
+        {
+        }
+
+    }
+
+    public class GyroscopeMeasurementEventArgs : EventArgs
+    {
+        public GyroscopeMeasurementEventArgs(GyroscopeMeasurement measurement, DateTimeOffset timestamp)
+        {
+            Measurement = measurement;
+            Timestamp = timestamp;
+        }
+
+        public GyroscopeMeasurement Measurement
+        {
+            get;
+            private set;
+        }
+
+        public DateTimeOffset Timestamp
+        {
+            get;
+            private set;
+        }
+    }
+
+}
