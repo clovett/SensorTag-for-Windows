@@ -18,9 +18,15 @@
 
         <TextBlock x:Name="DeviceName" Text="SensorTag" FontSize="36" Margin="10" />
 
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Row="1" >
+        <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto" Grid.Row="1" >
             <StackPanel Orientation="Vertical" >
 
+                <TextBlock FontSize="24" Text="Buttons" Margin="10,5" VerticalAlignment="Top"
+                       Foreground="{StaticResource PhoneAccentBrush}"/>
+
+                <TextBlock FontSize="24" x:Name="Buttons" Text="" Margin="20,5" VerticalAlignment="Top"/>
+
+                
                 <TextBlock FontSize="24" Text="IR Temperature" Margin="10,5" VerticalAlignment="Top"
                        Foreground="{StaticResource PhoneAccentBrush}"/>
 

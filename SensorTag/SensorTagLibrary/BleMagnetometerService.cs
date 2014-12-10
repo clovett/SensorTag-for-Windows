@@ -40,7 +40,7 @@ namespace SensorTag
                 else
                 {
                     _magnetometerValueChanged = value;
-                    var nowait = RegisterForValueChangeEvents(MagnetometerCharacteristicUuid);
+                    RegisterForValueChangeEvents(MagnetometerCharacteristicUuid);
                 }
             }
             remove
@@ -51,7 +51,7 @@ namespace SensorTag
                 }
                 if (_magnetometerValueChanged == null)
                 {
-                    var nowait = UnregisterForValueChangeEvents(MagnetometerCharacteristicUuid);
+                    UnregisterForValueChangeEvents(MagnetometerCharacteristicUuid);
                 }
             }
         }

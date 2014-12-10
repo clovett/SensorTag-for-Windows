@@ -8,18 +8,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SensorTagLibrary", "SensorTagLibrary\SensorTagLibrary.csproj", "{702DF202-1CFE-456D-9DF9-5E4E4DAA02A4}"
 EndProject
 Global
-	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 3
-		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-		SccTeamFoundationServer = https://lovettsoftware.visualstudio.com/defaultcollection
-		SccLocalPath0 = .
-		SccProjectUniqueName1 = SensorTag\\SensorTag.csproj
-		SccProjectName1 = SensorTag
-		SccLocalPath1 = SensorTag
-		SccProjectUniqueName2 = SensorTagLibrary\\SensorTagLibrary.csproj
-		SccProjectName2 = SensorTagLibrary
-		SccLocalPath2 = SensorTagLibrary
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|ARM = Debug|ARM

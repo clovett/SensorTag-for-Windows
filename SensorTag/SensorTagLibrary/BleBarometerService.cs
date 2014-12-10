@@ -45,7 +45,7 @@ namespace SensorTag
                 else
                 {
                     _barometerValueChanged = value;
-                    var nowait = RegisterForValueChangeEvents(BarometerCharacteristicUuid);
+                    RegisterForValueChangeEvents(BarometerCharacteristicUuid);
                 }
             }
             remove
@@ -56,7 +56,7 @@ namespace SensorTag
                 }
                 if (_barometerValueChanged == null)
                 {
-                    var nowait = UnregisterForValueChangeEvents(BarometerCharacteristicUuid);
+                    UnregisterForValueChangeEvents(BarometerCharacteristicUuid);
                 }
             }
         }
@@ -171,38 +171,22 @@ namespace SensorTag
             // this code implements the algorithm in T5400 data sheet at
             // http://processors.wiki.ti.com/index.php/SensorTag_User_Guide#Barometric_Pressure_Sensor
 
-            // raw temperature
-            int Tr = (int)data[0] + ((sbyte)data[1] << 8); // upper byte is signed.
-
-            // raw pressure
-            int Pr = (int)data[2] + (data[3] << 8); // upper byte is unsigned.
-
             if (this.c != null)
             {
-                BarometerMeasurement measurement = new BarometerMeasurement();                
+                BarometerMeasurement measurement = new BarometerMeasurement();
 
-                long c1 = c[0];
-                long c2 = c[1];
-                long c3 = c[2];
-                long c4 = c[3];
-                long c5 = c[4];
-                long c6 = c[5];
-                long c7 = c[6];
-                long c8 = c[7];
+                //more info about the calculation:
+                //http://www.epcos.com/web/generator/Web/Sections/ProductCatalog/Sensors/PressureSensors/T5400-ApplicationNote,property=Data__en.pdf;/T5400_ApplicationNote.pdf                
 
-                // Ta = ((c1 * Tr) / 2^24) + (c2 / 2^10)
-                var Ta = ((c1 * Tr) >> 24) + (c2 >> 10);
+                int tr = BitConverter.ToInt16(data, 0); // Temperature raw value
+                int pr = BitConverter.ToUInt16(data, 2); // Pressure raw value from sensor
 
-                // * Formula from application note, rev_X:
-                // Sensitivity = (c3 + ((c4 * Tr) / 2^17) + ((c5 * Tr^2) / 2^34))
-                // Offset = (c6 * 2^14) + ((c7 * Tr) / 2^3) + ((c8 * Tr^2) / 2^19)
-                // Pa = (Sensitivity * Pr + Offset) / 2^14
+                // Temperature actual value in unit centi degrees celsius
+                double t_a = (100 * (c[0] * tr / Math.Pow(2, 8) + c[1] * Math.Pow(2, 6))) / Math.Pow(2, 16);
+                double sensitivity = c[2] + c[3] * tr / Math.Pow(2, 17) + ((c[4] * tr / Math.Pow(2, 15)) * tr) / Math.Pow(2, 19);
+                double offset = c[5] * Math.Pow(2, 14) + c[6] * tr / Math.Pow(2, 3) + ((c[7] * tr / Math.Pow(2, 15)) * tr) / Math.Pow(2, 4);
 
-                var Sensitivity = c3 + ((c4 * Tr) >> 17) + ((c5 * Tr * Tr) >> 34);
-                var Offset = (c6 << 14) + ((c7 * Tr) >> 3) + ((c8 * Tr * Tr) >> 19);
-                var Pa = (Sensitivity * Pr + Offset) >> 14;
-
-                measurement.Pascals = Pa;
+                measurement.Pascals = (sensitivity * pr + offset) / Math.Pow(2, 14);
 
                 OnBarometerMeasurementValueChanged(new BarometerMeasurementEventArgs(measurement, timestamp));
             }
@@ -214,47 +198,34 @@ namespace SensorTag
             byte[] data = await ReadCharacteristicBytes(BarometerCharacteristicCalibrationUuid, Windows.Devices.Bluetooth.BluetoothCacheMode.Uncached);
             if (data.Length == 16)
             {
-                bool nonZero = false;
-                int[] c = new int[8];
-
-                // first 4 values are unsigned shorts
-                for (int i = 0; i < 4; i++)
-                {
-                    int j = i * 2; // byte index.
-
-                    ushort value = ((ushort)((ushort)data[j] + ((ushort)data[j + 1] << 8))); // upper byte is unsigned.
-                    c[i] = value;
-                    if (value != 0)
-                    {
-                        nonZero = true;
-                    }
-                }
-
-                // next 4 values are signed.
-                for (int i = 4; i < 8; i++)
-                {
-                    int j = i * 2; // byte index.
-                    short value = ((short)((short)data[j] + (short)data[j + 1] << 8)); // upper byte is unsigned.
-                    c[i] = value;
-                    if (value != 0)
-                    {
-                        nonZero = true;
-                    }
-                }
-
-                if (nonZero)
-                {
-                    this.c = c;
-
-                    if (Calibrated != null)
-                    {
-                        Calibrated(this, EventArgs.Empty);
-                    }
-                }
+                SetCalibration(data);
             }
 
             return this.c;
         }
+
+        private void SetCalibration(byte[] data)
+        {
+            int[] calibrationData = new int[8];
+
+            calibrationData[0] = BitConverter.ToUInt16(data, 0);
+            calibrationData[1] = BitConverter.ToUInt16(data, 2);
+            calibrationData[2] = BitConverter.ToUInt16(data, 4);
+            calibrationData[3] = BitConverter.ToUInt16(data, 6);
+            calibrationData[4] = BitConverter.ToInt16(data, 8);
+            calibrationData[5] = BitConverter.ToInt16(data, 10);
+            calibrationData[6] = BitConverter.ToInt16(data, 12);
+            calibrationData[7] = BitConverter.ToInt16(data, 14);
+
+
+            this.c = calibrationData;
+
+            if (Calibrated != null)
+            {
+                Calibrated(this, EventArgs.Empty);
+            }
+        }
+
         private void UpdateCalibrationData(GattValueChangedEventArgs eventArgs)
         {
             uint dataLength = eventArgs.CharacteristicValue.Length;
@@ -264,18 +235,7 @@ namespace SensorTag
                 {
                     var data = new byte[dataLength];
                     reader.ReadBytes(data);
-
-                    c = new int[8];
-                    for (int i = 0; i < 8; i++)
-                    {
-                        int j = i * 2; // byte index.
-                        c[i] = (int)data[j] + (data[j + 1] << 8); // upper byte is unsigned.
-                    }
-
-                    if (Calibrated != null)
-                    {
-                        Calibrated(this, EventArgs.Empty);
-                    }
+                    SetCalibration(data);
                 }
             }
         }

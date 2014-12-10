@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
+using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Core;
@@ -30,6 +31,7 @@ namespace SensorTag
     {
         const double MaxBattery = 100; // values range from 0 to 100 - it is a percentage.
         BleIRTemperatureService _tempService;
+        BleButtonService _buttonService;
         BleAccelerometerService _accelService;
         BleGyroscopeService _gyroService;
         BleMagnetometerService _magService;
@@ -106,13 +108,44 @@ namespace SensorTag
                 if (await _tempService.ConnectAsync())
                 {
                     DeviceName.Text = "" + _tempService.DeviceName;
-                    DisplayMessage("connected");
-
                     _tempService.IRTemperatureMeasurementValueChanged += OnIRTemperatureMeasurementValueChanged;
                     _tempService.ConnectionChanged += OnConnectionChanged;
                     _tempService.StartReading();
                 }
             }
+        }
+
+        private async Task ConnectButtonService()
+        {
+            if (_buttonService == null)
+            {
+                _buttonService = new BleButtonService();
+                _buttonService.Error += OnServiceError;
+
+                if (await _buttonService.ConnectAsync())
+                {
+                    DeviceName.Text = "" + _buttonService.DeviceName;
+                    _buttonService.ButtonValueChanged += OnButtonValueChanged;
+                    _buttonService.ConnectionChanged += OnConnectionChanged;
+                }
+            }
+        }
+
+        private void OnButtonValueChanged(object sender, SensorButtonEventArgs e)
+        {
+            string caption = "";
+            if (e.LeftButtonDown)
+            {
+                caption += "Left ";
+            }
+            if (e.RightButtonDown)
+            {
+                caption += "Right";
+            }
+            var nowait = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(() =>
+            {
+                Buttons.Text = caption;
+            }));
         }
 
         private async Task ConnectAccelerometerService()
@@ -125,8 +158,6 @@ namespace SensorTag
                 if (await _accelService.ConnectAsync())
                 {
                     DeviceName.Text = "" + _accelService.DeviceName;
-                    DisplayMessage("connected");
-
                     _accelService.AccelerometerMeasurementValueChanged += OnAccelerometerMeasurementValueChanged;
                     _accelService.ConnectionChanged += OnConnectionChanged;
                     _accelService.StartReading();
@@ -148,8 +179,6 @@ namespace SensorTag
                 if (await _gyroService.ConnectAsync())
                 {
                     DeviceName.Text = "" + _gyroService.DeviceName;
-                    DisplayMessage("connected");
-
                     _gyroService.GyroscopeMeasurementValueChanged += OnGyroscopeMeasurementValueChanged;
                     _gyroService.ConnectionChanged += OnConnectionChanged;
                     _gyroService.StartReading(GyroscopeAxes.XYZ);
@@ -169,8 +198,6 @@ namespace SensorTag
                 if (await _magService.ConnectAsync())
                 {
                     DeviceName.Text = "" + _magService.DeviceName;
-                    DisplayMessage("connected");
-
                     _magService.MagnetometerMeasurementValueChanged += OnMagnetometerMeasurementValueChanged;
                     _magService.ConnectionChanged += OnConnectionChanged;
                     _magService.StartReading();
@@ -191,8 +218,6 @@ namespace SensorTag
                 if (await _humidityService.ConnectAsync())
                 {
                     DeviceName.Text = "" + _humidityService.DeviceName;
-                    DisplayMessage("connected");
-
                     _humidityService.HumidityMeasurementValueChanged += OnHumidityMeasurementValueChanged;
                     _humidityService.ConnectionChanged += OnConnectionChanged;
                     _humidityService.StartReading();
@@ -211,8 +236,6 @@ namespace SensorTag
                 if (await _barometerService.ConnectAsync())
                 {
                     DeviceName.Text = "" + _barometerService.DeviceName;
-                    DisplayMessage("connected");
-
                     BarometricPressure.Text = "calibrating...";
                     _barometerService.ConnectionChanged += OnConnectionChanged;
                     await _barometerService.StartCalibration();
@@ -315,6 +338,7 @@ namespace SensorTag
             var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
             {
                 ErrorMessage.Text = message;
+                Scroller.ChangeView(null, Scroller.ScrollableHeight, null);
             }));
         }
 
@@ -363,6 +387,16 @@ namespace SensorTag
                     _tempService.IRTemperatureMeasurementValueChanged -= OnIRTemperatureMeasurementValueChanged;
                     _tempService.ConnectionChanged -= OnConnectionChanged;
                     _tempService = null;
+                }
+            }
+            if (_buttonService != null)
+            {
+                using (_buttonService)
+                {
+                    _buttonService.Error -= OnServiceError;
+                    _buttonService.ButtonValueChanged -= OnButtonValueChanged;
+                    _buttonService.ConnectionChanged -= OnConnectionChanged;
+                    _buttonService = null;
                 }
             }
             if (_accelService != null)
@@ -436,11 +470,13 @@ namespace SensorTag
                     connecting = true;
                     DisplayMessage("connecting...");
                     await ConnectIRTemperatureService();
+                    await ConnectButtonService();
                     await ConnectAccelerometerService();
                     await ConnectGyroscopeService();
                     await ConnectMagnetometerService();
                     await ConnectHumidityService();
                     await ConnectBarometerService();
+                    DisplayMessage("connected");
                     StartTimer();
                 }
                 catch (Exception ex)

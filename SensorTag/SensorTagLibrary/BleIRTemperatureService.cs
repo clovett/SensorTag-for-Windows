@@ -37,7 +37,7 @@ namespace SensorTag
                 else
                 {
                     _irTemperatureValueChanged = value;
-                    var nowait = RegisterForValueChangeEvents(IRTemperatureCharacteristicUuid);
+                    RegisterForValueChangeEvents(IRTemperatureCharacteristicUuid);
                 }
             }
             remove
@@ -48,7 +48,7 @@ namespace SensorTag
                 }
                 if (_irTemperatureValueChanged == null)
                 {
-                    var nowait = UnregisterForValueChangeEvents(IRTemperatureCharacteristicUuid);
+                    UnregisterForValueChangeEvents(IRTemperatureCharacteristicUuid);
                 }
             }
         }

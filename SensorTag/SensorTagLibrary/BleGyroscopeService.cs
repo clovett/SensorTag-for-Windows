@@ -50,7 +50,7 @@ namespace SensorTag
                 else
                 {
                     _gyroscopeValueChanged = value;
-                    var nowait = RegisterForValueChangeEvents(GyroscopeCharacteristicUuid);
+                    RegisterForValueChangeEvents(GyroscopeCharacteristicUuid);
                 }
             }
             remove
@@ -61,7 +61,7 @@ namespace SensorTag
                 }
                 if (_gyroscopeValueChanged == null)
                 {
-                    var nowait = UnregisterForValueChangeEvents(GyroscopeCharacteristicUuid);
+                    UnregisterForValueChangeEvents(GyroscopeCharacteristicUuid);
                 }
             }
         }

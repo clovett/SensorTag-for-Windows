@@ -40,7 +40,7 @@ namespace SensorTag
                 else
                 {
                     _accelerometerValueChanged = value;
-                    var nowait = RegisterForValueChangeEvents(AccelerometerCharacteristicUuid);
+                    RegisterForValueChangeEvents(AccelerometerCharacteristicUuid);
                 }
             }
             remove
@@ -51,7 +51,7 @@ namespace SensorTag
                 }
                 if (_accelerometerValueChanged == null)
                 {
-                    var nowait = UnregisterForValueChangeEvents(AccelerometerCharacteristicUuid);
+                    UnregisterForValueChangeEvents(AccelerometerCharacteristicUuid);
                 }
             }
         }

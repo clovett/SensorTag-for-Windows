@@ -42,7 +42,7 @@ namespace SensorTag
                 else
                 {
                     _humidityValueChanged = value;
-                    var nowait = RegisterForValueChangeEvents(HumidityCharacteristicUuid);
+                    RegisterForValueChangeEvents(HumidityCharacteristicUuid);
                 }
             }
             remove
@@ -53,7 +53,7 @@ namespace SensorTag
                 }
                 if (_humidityValueChanged == null)
                 {
-                    var nowait = UnregisterForValueChangeEvents(HumidityCharacteristicUuid);
+                    UnregisterForValueChangeEvents(HumidityCharacteristicUuid);
                 }
             }
         }

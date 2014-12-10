@@ -50,6 +50,7 @@
     <Compile Include="BleBatteryLevelService.cs" />
     <Compile Include="BleGenericGattService.cs" />
     <Compile Include="BleGyroscopeService.cs" />
+    <Compile Include="BleButtonService.cs" />
     <Compile Include="BleHumidityService.cs" />
     <Compile Include="BleIRTemperatureService.cs" />
     <Compile Include="BleMagnetometerService.cs" />

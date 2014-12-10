@@ -39,7 +39,7 @@ namespace Microsoft.MobileLabs.Bluetooth
     {
         GattDeviceService _service;
         PnpObjectWatcher _connectionWatcher;
-        List<GattCharacteristic> _characteristics = new List<GattCharacteristic>();              
+        List<GattCharacteristic> _characteristics = new List<GattCharacteristic>();
         Guid _requestedServiceGuid;
         List<Guid> _requestedCharacteristics = new List<Guid>();
         bool _connected;
@@ -130,14 +130,14 @@ namespace Microsoft.MobileLabs.Bluetooth
         private static readonly string CONNECTED_FLAG_PROPERTY_NAME = "System.Devices.Connected";
 
         private Dictionary<String, String> deviceId2Name = new Dictionary<string, string>();
-        protected async Task<Dictionary<String,String>> FindMatchingDevices(Guid serviceGuid)
+        protected async Task<Dictionary<String, String>> FindMatchingDevices(Guid serviceGuid)
         {
             var devices = await DeviceInformation.FindAllAsync(GattDeviceService.GetDeviceSelectorFromUuid(
                                                                  serviceGuid), new string[] {
                                                                          CONTAINER_ID_PROPERTY_NAME
                                                                      });
             this.deviceId2Name.Clear();
-            foreach( DeviceInformation device in devices)
+            foreach (DeviceInformation device in devices)
             {
                 string id = device.Properties[CONTAINER_ID_PROPERTY_NAME].ToString();
                 this.deviceId2Name[id] = device.Name;
@@ -164,10 +164,10 @@ namespace Microsoft.MobileLabs.Bluetooth
             if (devices.Count == 0)
             {
                 _connected = false;
-                OnError("no devices found");
+                OnError("no devices found, try using bluetooth settings to pair your device");
                 return false;
             }
-            
+
             DeviceInformation deviceInformation = null;
 
             foreach (DeviceInformation device in devices)
@@ -204,94 +204,102 @@ namespace Microsoft.MobileLabs.Bluetooth
 
             OnConnectionChanged(_connected);
 
-            if (_service != null) 
+            if (_service != null)
             {
                 Debug.WriteLine("Service connected: " + this.GetType().Name);
             }
             return true;
         }
 
-        public async Task RegisterForValueChangeEvents(Guid guid)
+        protected async void RegisterForValueChangeEvents(Guid guid)
         {
             if (_service == null)
             {
                 Debug.WriteLine("RegisterForValueChangeEvents called when service was disconnected");
                 return;
             }
-            GattCharacteristic characteristic = _service.GetCharacteristics(guid).FirstOrDefault();
+            try
+            {
+                GattCharacteristic characteristic = _service.GetCharacteristics(guid).FirstOrDefault();
 
-            if (characteristic == null)
-            {
-                OnError("Characteristic " + guid + " not available");
-                return;
-            }
-
-            GattCharacteristicProperties properties = characteristic.CharacteristicProperties;
-
-            Debug.WriteLine("Characteristic {0} supports: ", guid.ToString("b"));
-            if ((properties & GattCharacteristicProperties.Broadcast) != 0)
-            {
-                Debug.WriteLine("    Broadcast");
-            }
-            if ((properties & GattCharacteristicProperties.Read) != 0)
-            {
-                Debug.WriteLine("    Read");
-            }
-            if ((properties & GattCharacteristicProperties.WriteWithoutResponse) != 0)
-            {
-                Debug.WriteLine("    WriteWithoutResponse");
-            }
-            if ((properties & GattCharacteristicProperties.Write) != 0)
-            {
-                Debug.WriteLine("    Write");
-            }
-            if ((properties & GattCharacteristicProperties.Notify) != 0)
-            {
-                Debug.WriteLine("    Notify");
-            }
-            if ((properties & GattCharacteristicProperties.Indicate) != 0)
-            {
-                Debug.WriteLine("    Indicate");
-            }
-            if ((properties & GattCharacteristicProperties.AuthenticatedSignedWrites) != 0)
-            {
-                Debug.WriteLine("    AuthenticatedSignedWrites");
-            }
-            if ((properties & GattCharacteristicProperties.ExtendedProperties) != 0)
-            {
-                Debug.WriteLine("    ExtendedProperties");
-            }
-            if ((properties & GattCharacteristicProperties.ReliableWrites) != 0)
-            {
-                Debug.WriteLine("    ReliableWrites");
-            }
-            if ((properties & GattCharacteristicProperties.WritableAuxiliaries) != 0)
-            {
-                Debug.WriteLine("    WritableAuxiliaries");
-            }
-
-            if ((properties & GattCharacteristicProperties.Notify) != 0)
-            {
-                characteristic.ValueChanged += OnCharacteristicValueChanged;
-
-                GattCommunicationStatus status = await characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
-                        GattClientCharacteristicConfigurationDescriptorValue.Notify);
-
-                if (status != GattCommunicationStatus.Success)
+                if (characteristic == null)
                 {
-                    Debug.WriteLine("GattClientCharacteristicConfigurationDescriptorValue.Notify: " + status);
-                    if (status == GattCommunicationStatus.Unreachable)
+                    OnError("Characteristic " + guid + " not available");
+                    return;
+                }
+
+
+                GattCharacteristicProperties properties = characteristic.CharacteristicProperties;
+
+
+                Debug.WriteLine("Characteristic {0} supports: ", guid.ToString("b"));
+                if ((properties & GattCharacteristicProperties.Broadcast) != 0)
+                {
+                    Debug.WriteLine("    Broadcast");
+                }
+                if ((properties & GattCharacteristicProperties.Read) != 0)
+                {
+                    Debug.WriteLine("    Read");
+                }
+                if ((properties & GattCharacteristicProperties.WriteWithoutResponse) != 0)
+                {
+                    Debug.WriteLine("    WriteWithoutResponse");
+                }
+                if ((properties & GattCharacteristicProperties.Write) != 0)
+                {
+                    Debug.WriteLine("    Write");
+                }
+                if ((properties & GattCharacteristicProperties.Notify) != 0)
+                {
+                    Debug.WriteLine("    Notify");
+                }
+                if ((properties & GattCharacteristicProperties.Indicate) != 0)
+                {
+                    Debug.WriteLine("    Indicate");
+                }
+                if ((properties & GattCharacteristicProperties.AuthenticatedSignedWrites) != 0)
+                {
+                    Debug.WriteLine("    AuthenticatedSignedWrites");
+                }
+                if ((properties & GattCharacteristicProperties.ExtendedProperties) != 0)
+                {
+                    Debug.WriteLine("    ExtendedProperties");
+                }
+                if ((properties & GattCharacteristicProperties.ReliableWrites) != 0)
+                {
+                    Debug.WriteLine("    ReliableWrites");
+                }
+                if ((properties & GattCharacteristicProperties.WritableAuxiliaries) != 0)
+                {
+                    Debug.WriteLine("    WritableAuxiliaries");
+                }
+
+                if ((properties & GattCharacteristicProperties.Notify) != 0)
+                {
+                    characteristic.ValueChanged += OnCharacteristicValueChanged;
+
+                    GattCommunicationStatus status = await characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
+                            GattClientCharacteristicConfigurationDescriptorValue.Notify);
+
+                    if (status != GattCommunicationStatus.Success)
                     {
-                        throw new Exception("Registering to get notification from the device failed saying device is unreachable.  Perhaps the device is connected to another computer?");
+                        Debug.WriteLine("GattClientCharacteristicConfigurationDescriptorValue.Notify: " + status);
+                        if (status == GattCommunicationStatus.Unreachable)
+                        {
+                            OnError("Registering to get notification from the device failed saying device is unreachable.  Perhaps the device is connected to another computer?");
+                        }
                     }
                 }
+                this._requestedCharacteristics.Add(guid);
+                _characteristics.Add(characteristic);
             }
-
-            this._requestedCharacteristics.Add(guid);
-            _characteristics.Add(characteristic);
+            catch (Exception ex)
+            {
+                OnError("Unhandled exception registering for notifications. " + ex.Message);
+            }
         }
 
-        public async Task UnregisterForValueChangeEvents(Guid guid)
+        public async void UnregisterForValueChangeEvents(Guid guid)
         {
             foreach (var characteristic in _characteristics.ToArray())
             {
@@ -311,6 +319,11 @@ namespace Microsoft.MobileLabs.Bluetooth
                 // stop notifying.
                 GattCommunicationStatus status = await characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
                         GattClientCharacteristicConfigurationDescriptorValue.None);
+
+                if (status == GattCommunicationStatus.Unreachable)
+                {
+                    OnError("Unregistering notification from the device failed saying device is unreachable.");
+                }
 
                 characteristic.ValueChanged -= OnCharacteristicValueChanged;
             }
@@ -370,7 +383,7 @@ namespace Microsoft.MobileLabs.Bluetooth
                     }
                     reconnectTaskCancel = new CancellationTokenSource();
                     var nowait = Task.Run(new Action(() => { ReregisterAllValueChangeEvents(); }), reconnectTaskCancel.Token);
-                }             
+                }
                 OnConnectionChanged(isConnected);
             }
         }
@@ -385,15 +398,8 @@ namespace Microsoft.MobileLabs.Bluetooth
             {
                 foreach (Guid guid in temp.ToArray())
                 {
-                    try
-                    {
-                        await RegisterForValueChangeEvents(guid);
-                        temp.Remove(guid); // this one is good.
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine("Error registering value change event: " + ex.Message);
-                    }
+                    RegisterForValueChangeEvents(guid);
+                    temp.Remove(guid); // this one is good.
 
                     // sometimes we get a weird exception saying some semaphore has timed out inside
                     // the BLE stack with HRESULT 0x80070079, so if that happens we wait a bit and try again      
@@ -443,7 +449,7 @@ namespace Microsoft.MobileLabs.Bluetooth
                 throw new Exception(string.Format("Characteristic '{0}' not found", characteristicGuid.ToString()));
             }
         }
-        
+
         public async Task<byte> ReadCharacteristicByte(Guid characteristicGuid, BluetoothCacheMode cacheMode)
         {
             var ch = GetCharacteristic(characteristicGuid);
@@ -457,7 +463,7 @@ namespace Microsoft.MobileLabs.Bluetooth
                     var status = result.Status;
                     if (status != GattCommunicationStatus.Success)
                     {
-                        throw new Exception("Read failed: " + status.ToString());                        
+                        throw new Exception("Read failed: " + status.ToString());
                     }
                     IBuffer buffer = result.Value;
                     DataReader reader = DataReader.FromBuffer(buffer);

@@ -32,7 +32,7 @@ namespace Microsoft.MobileLabs.Bluetooth
             bool rc = await this.ConnectAsync(GattServiceUuids.Battery, deviceContainerId);
             if (rc)
             {
-                await this.RegisterForValueChangeEvents(GattCharacteristicUuids.BatteryLevel);
+                this.RegisterForValueChangeEvents(GattCharacteristicUuids.BatteryLevel);
             }
             return rc;
         }
