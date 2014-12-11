@@ -98,7 +98,6 @@ namespace SensorTag
 
             await ReadCalibration();
 
-            StartReading();
         }
 
         public event EventHandler Calibrated;

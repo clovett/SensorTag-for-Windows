@@ -45,7 +45,7 @@
         <ComboBox x:Name="UnitCombo" Grid.Row="2" Margin="10" Header="Units:">
         </ComboBox>
 
-        <TextBlock x:Name="ValueText" FontSize="72" Text="996.8" 
+        <TextBlock x:Name="ValueText" FontSize="72" Text="" 
                     VerticalAlignment="Center" HorizontalAlignment="Center"
                     Grid.Row="3"         
                        />

@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30723.0
+VisualStudioVersion = 12.0.30501.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SensorTag", "SensorTag\SensorTag.csproj", "{75E5DCE6-8B90-4358-8D6D-0398550C2A0B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SensorTagLibrary", "SensorTagLibrary\SensorTagLibrary.csproj", "{702DF202-1CFE-456D-9DF9-5E4E4DAA02A4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SensorTag.Windows", "SensorTag.Windows\SensorTag.Windows.csproj", "{B6C91496-F435-49C2-A851-4C8E8D780823}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -71,6 +73,42 @@ Global
 		{702DF202-1CFE-456D-9DF9-5E4E4DAA02A4}.Release|Win32.ActiveCfg = Release|Any CPU
 		{702DF202-1CFE-456D-9DF9-5E4E4DAA02A4}.Release|x64.ActiveCfg = Release|Any CPU
 		{702DF202-1CFE-456D-9DF9-5E4E4DAA02A4}.Release|x86.ActiveCfg = Release|Any CPU
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Debug|ARM.ActiveCfg = Debug|ARM
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Debug|ARM.Build.0 = Debug|ARM
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Debug|ARM.Deploy.0 = Debug|ARM
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Debug|Mixed Platforms.Deploy.0 = Debug|x86
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Debug|Win32.ActiveCfg = Debug|x86
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Debug|Win32.Build.0 = Debug|x86
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Debug|Win32.Deploy.0 = Debug|x86
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Debug|x64.ActiveCfg = Debug|x64
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Debug|x64.Build.0 = Debug|x64
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Debug|x64.Deploy.0 = Debug|x64
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Debug|x86.ActiveCfg = Debug|x86
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Debug|x86.Build.0 = Debug|x86
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Debug|x86.Deploy.0 = Debug|x86
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Release|ARM.ActiveCfg = Release|ARM
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Release|ARM.Build.0 = Release|ARM
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Release|ARM.Deploy.0 = Release|ARM
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Release|Mixed Platforms.Build.0 = Release|x86
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Release|Mixed Platforms.Deploy.0 = Release|x86
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Release|Win32.ActiveCfg = Release|x86
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Release|Win32.Build.0 = Release|x86
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Release|Win32.Deploy.0 = Release|x86
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Release|x64.ActiveCfg = Release|x64
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Release|x64.Build.0 = Release|x64
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Release|x64.Deploy.0 = Release|x64
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Release|x86.ActiveCfg = Release|x86
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Release|x86.Build.0 = Release|x86
+		{B6C91496-F435-49C2-A851-4C8E8D780823}.Release|x86.Deploy.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

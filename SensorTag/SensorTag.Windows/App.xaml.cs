@@ -7,7 +7,6 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
-using Windows.Phone.UI.Input;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -33,39 +32,23 @@ namespace SensorTag
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
-            HardwareButtons.BackPressed += HardwareButtons_BackPressed;
-
-        }
-
-        /// <summary>
-        /// Handles back button press.  If app is at the root page of app, don't go back and the
-        /// system will suspend the app.
-        /// </summary>
-        /// <param name="sender">The source of the BackPressed event.</param>
-        /// <param name="e">Details for the BackPressed event.</param>
-        private void HardwareButtons_BackPressed(object sender, BackPressedEventArgs e)
-        {
-            Frame frame = Window.Current.Content as Frame;
-            if (frame == null)
-            {
-                return;
-            }
-
-            if (frame.CanGoBack)
-            {
-                frame.GoBack();
-                e.Handled = true;
-            }
         }
 
         /// <summary>
         /// Invoked when the application is launched normally by the end user.  Other entry points
-        /// will be used when the application is launched to open a specific file, to display
-        /// search results, and so forth.
+        /// will be used such as when the application is launched to open a specific file.
         /// </summary>
         /// <param name="e">Details about the launch request and process.</param>
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
+
+#if DEBUG
+            if (System.Diagnostics.Debugger.IsAttached)
+            {
+                this.DebugSettings.EnableFrameRateCounter = true;
+            }
+#endif
+
             Frame rootFrame = Window.Current.Content as Frame;
 
             // Do not repeat app initialization when the Window already has content,
@@ -74,6 +57,10 @@ namespace SensorTag
             {
                 // Create a Frame to act as the navigation context and navigate to the first page
                 rootFrame = new Frame();
+                // Set the default language
+                rootFrame.Language = Windows.Globalization.ApplicationLanguages.Languages[0];
+
+                rootFrame.NavigationFailed += OnNavigationFailed;
 
                 if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
                 {
@@ -89,30 +76,20 @@ namespace SensorTag
                 // When the navigation stack isn't restored navigate to the first page,
                 // configuring the new page by passing required information as a navigation
                 // parameter
-                if (!rootFrame.Navigate(typeof(MainPage), e.Arguments))
-                {
-                    throw new Exception("Failed to create initial page");
-                }
+                rootFrame.Navigate(typeof(MainPage), e.Arguments);
             }
-
             // Ensure the current window is active
             Window.Current.Activate();
-
-            // Make sure we are listening to this event
-            Window.Current.VisibilityChanged -= OnWindowVisibilityChanged;
-            Window.Current.VisibilityChanged += OnWindowVisibilityChanged;
-
         }
 
-        private void OnWindowVisibilityChanged(object sender, Windows.UI.Core.VisibilityChangedEventArgs e)
+        /// <summary>
+        /// Invoked when Navigation to a certain page fails
+        /// </summary>
+        /// <param name="sender">The Frame which failed navigation</param>
+        /// <param name="e">Details about the navigation failure</param>
+        void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
         {
-            Frame frame = Window.Current.Content as Frame;
-            IWindowVisibilityWatcher watcher = frame.Content as IWindowVisibilityWatcher;
-            if (watcher != null)
-            {
-                watcher.OnVisibilityChanged(e.Visible);
-            }
-            
+            throw new Exception("Failed to load Page " + e.SourcePageType.FullName);
         }
 
         /// <summary>
@@ -125,7 +102,7 @@ namespace SensorTag
         private void OnSuspending(object sender, SuspendingEventArgs e)
         {
             var deferral = e.SuspendingOperation.GetDeferral();
-            Window.Current.VisibilityChanged -= OnWindowVisibilityChanged;
+            //TODO: Save application state and stop any background activity
             deferral.Complete();
         }
     }

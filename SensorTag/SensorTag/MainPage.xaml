@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:SensorTag"
+    xmlns:c="using:SensorTag.Controls"
     xmlns:ble="using:Microsoft.MobileLabs.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -16,52 +17,26 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock x:Name="DeviceName" Text="SensorTag" FontSize="36" Margin="10" />
+        <Grid Background="#00b2f0">
+            <TextBlock x:Name="DeviceName" Text="SensorTag" FontSize="36" Margin="10" />
+        </Grid>
 
-        <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto" Grid.Row="1" >
-            <StackPanel Orientation="Vertical" >
 
-                <TextBlock FontSize="24" Text="Buttons" Margin="10,5" VerticalAlignment="Top"
-                       Foreground="{StaticResource PhoneAccentBrush}"/>
+        <ListView x:Name="SensorList"  Grid.Row="1">
+            <ListView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapGrid Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+            </ListView.ItemsPanel>
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <c:TileControl Click="OnTileClick" Margin="10"/>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
 
-                <TextBlock FontSize="24" x:Name="Buttons" Text="" Margin="20,5" VerticalAlignment="Top"/>
 
-                
-                <TextBlock FontSize="24" Text="IR Temperature" Margin="10,5" VerticalAlignment="Top"
-                       Foreground="{StaticResource PhoneAccentBrush}"/>
+        <TextBlock x:Name="ErrorMessage" Text="" FontSize="24" Margin="10" Grid.Row="2" TextWrapping="Wrap" Foreground="Salmon"/>
 
-                <TextBlock FontSize="24" x:Name="IRTemp" Text="64" Margin="20,5" VerticalAlignment="Top"/>
-
-                <TextBlock FontSize="24" Text="Accelerometer" Margin="10,5" VerticalAlignment="Top"
-                       Foreground="{StaticResource PhoneAccentBrush}"/>
-
-                <TextBlock FontSize="24" x:Name="Accelerometer" Text="64" Margin="20,5" VerticalAlignment="Top"/>
-
-                <TextBlock FontSize="24" Text="Gyroscope" Margin="10,5" VerticalAlignment="Top"
-                       Foreground="{StaticResource PhoneAccentBrush}"/>
-
-                <TextBlock FontSize="24" x:Name="Gyroscope" Text="64" Margin="20,5" VerticalAlignment="Top"/>
-
-                <TextBlock FontSize="24" Text="Magnetometer" Margin="10,5" VerticalAlignment="Top"
-                       Foreground="{StaticResource PhoneAccentBrush}"/>
-
-                <TextBlock FontSize="24" x:Name="Magnetometer" Text="64" Margin="20,5" VerticalAlignment="Top"/>
-
-                <TextBlock FontSize="24" Text="Humidity" Margin="10,5" VerticalAlignment="Top"
-                       Foreground="{StaticResource PhoneAccentBrush}"/>
-
-                <TextBlock FontSize="24" x:Name="Humidity" Text="64" Margin="20,5" VerticalAlignment="Top"/>
-
-                <TextBlock FontSize="24" Text="Barometric Pressure" Margin="10,5" VerticalAlignment="Top"
-                       Foreground="{StaticResource PhoneAccentBrush}"/>
-
-                <TextBlock FontSize="24" x:Name="BarometricPressure" Text="64" Margin="20,5" VerticalAlignment="Top"/>
-
-                <TextBlock x:Name="ErrorMessage" Text="" FontSize="24" Margin="10" Grid.Row="2" TextWrapping="Wrap" Foreground="Salmon"/>
-                
-            </StackPanel>
-        </ScrollViewer>
-        
-        <ble:BatteryLevelControl x:Name="BatteryLevel" Grid.Row="1" HorizontalAlignment="Left" Margin="40,150,0,0" VerticalAlignment="Bottom"/>
     </Grid>
 </Page>

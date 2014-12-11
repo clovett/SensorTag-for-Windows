@@ -1,4 +1,6 @@
 ﻿using Microsoft.MobileLabs.Bluetooth;
+using SensorTag.Controls;
+using SensorTag.Pages;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,6 +20,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
+using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
@@ -27,111 +30,97 @@ namespace SensorTag
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class MainPage : Page
+    public sealed partial class MainPage : Page, IWindowVisibilityWatcher
     {
-        const double MaxBattery = 100; // values range from 0 to 100 - it is a percentage.
-        BleIRTemperatureService _tempService;
-        BleButtonService _buttonService;
-        BleAccelerometerService _accelService;
-        BleGyroscopeService _gyroService;
-        BleMagnetometerService _magService;
-        BleHumidityService _humidityService;
-        BleBarometerService _barometerService;
         DispatcherTimer _timer;
+        SensorTag sensor;
+        List<TileModel> tiles = new List<TileModel>();
 
         public MainPage()
         {
             this.InitializeComponent();
-            IRTemp.Text = "";
+            // get the BLE services that we can share across pages.
+            sensor = SensorTag.Instance;
+
             Clear();
+
+            tiles.Add(new TileModel() { Caption = "Accelerometer", Icon = new BitmapImage(new Uri("ms-appx:/Assets/Accelerometer.png")) });
+            tiles.Add(new TileModel() { Caption = "Gyroscope", Icon = new BitmapImage(new Uri("ms-appx:/Assets/Gyroscope.png")) });
+            tiles.Add(new TileModel() { Caption = "Magnetometer", Icon = new BitmapImage(new Uri("ms-appx:/Assets/Compass.png")) });
+            tiles.Add(new TileModel() { Caption = "IR Temperature", Icon = new BitmapImage(new Uri("ms-appx:/Assets/IRTemperature.png")) });
+            tiles.Add(new TileModel() { Caption = "Humidity", Icon = new BitmapImage(new Uri("ms-appx:/Assets/Humidity.png")) });
+            tiles.Add(new TileModel() { Caption = "Barometer", Icon = new BitmapImage(new Uri("ms-appx:/Assets/Barometer.png")) });
+            tiles.Add(new TileModel() { Caption = "Buttons", Icon = new BitmapImage(new Uri("ms-appx:/Assets/Buttons.png")) });
+
+            // these ones we always listen to.
+            sensor.ServiceError += OnServiceError;
+            sensor.StatusChanged += OnStatusChanged;
+            sensor.PropertyChanged += OnSensorPropertyChanged;
+            sensor.ConnectionChanged += OnConnectionChanged;
+            SensorList.ItemsSource = tiles;
+
+            SensorList.AddHandler(PointerMovedEvent, new PointerEventHandler(Bubble_PointerMoved), false);
         }
 
-        private void Clear()
-        {
-            Accelerometer.Text = "";
-            Gyroscope.Text = "";
-            Magnetometer.Text = "";
-            Humidity.Text = "";
-            BarometricPressure.Text = "";
-        }
+        Point? previous;
+        ScrollViewer scroller;
 
-        /// <summary>
-        /// Invoked when this page is about to be displayed in a Frame.
-        /// </summary>
-        /// <param name="e">Event data that describes how this page was reached.  The Parameter
-        /// property is typically used to configure the page.</param>
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        private void Bubble_PointerMoved(object sender, PointerRoutedEventArgs e)
         {
-            Window.Current.VisibilityChanged -= OnWindowVisibilityChanged;
-            Window.Current.VisibilityChanged += OnWindowVisibilityChanged;
-            Reconnect();
-        }
-
-        void OnWindowVisibilityChanged(object sender, Windows.UI.Core.VisibilityChangedEventArgs e)
-        {
-            Window window = (Window)sender;
-            Frame frame = window.Content as Frame;
-            if (frame != null)
+            // Could walk up the tree to find the next SV or just have a reference like here:
+            if (scroller == null)
             {
-                MainPage main = frame.Content as MainPage;
-                if (main != null)
+                scroller = SensorList.FindDescendant<ScrollViewer>();
+            }
+            if (scroller != null)
+            {
+                Point pos = e.GetCurrentPoint(this).Position;
+                if (previous != null)
                 {
-                    if (e.Visible)
-                    {
-                        Reconnect();
-                    }
-                    else
-                    {
-                        // we are leaving the app, so disconnect the bluetooth services so other apps can use them.
-                        Disconnect();
-                    }
+                    Point past = previous.Value;
+                    scroller.ChangeView(scroller.HorizontalOffset + past.X - pos.X, scroller.VerticalOffset + past.Y - pos.Y, null);
                 }
+                previous = pos;
             }
         }
 
 
-        private void StartTimer()
+        public void RegisterEvents(bool register)
         {
-            _timer = new DispatcherTimer();
-            _timer.Interval = TimeSpan.FromSeconds(10);
-            _timer.Tick += OnTimerTick;
-            _timer.Start();
-        }
-
-        private async Task ConnectIRTemperatureService()
-        {
-            if (_tempService == null)
+            if (register)
             {
-                _tempService = new BleIRTemperatureService();
-                _tempService.Error += OnServiceError;
-
-                if (await _tempService.ConnectAsync())
-                {
-                    DeviceName.Text = "" + _tempService.DeviceName;
-                    _tempService.IRTemperatureMeasurementValueChanged += OnIRTemperatureMeasurementValueChanged;
-                    _tempService.ConnectionChanged += OnConnectionChanged;
-                    _tempService.StartReading();
-                }
+                sensor.BarometerMeasurementValueChanged += OnBarometerMeasurementValueChanged;
+                sensor.HumidityMeasurementValueChanged += OnHumidityMeasurementValueChanged;
+                sensor.MagnetometerMeasurementValueChanged += OnMagnetometerMeasurementValueChanged;
+                sensor.GyroscopeMeasurementValueChanged += OnGyroscopeMeasurementValueChanged;
+                sensor.AccelerometerMeasurementValueChanged += OnAccelerometerMeasurementValueChanged;
+                sensor.IRTemperatureMeasurementValueChanged += OnIRTemperatureMeasurementValueChanged;
+                sensor.ButtonValueChanged += OnButtonValueChanged;
+            }
+            else
+            {
+                sensor.BarometerMeasurementValueChanged -= OnBarometerMeasurementValueChanged;
+                sensor.HumidityMeasurementValueChanged -= OnHumidityMeasurementValueChanged;
+                sensor.MagnetometerMeasurementValueChanged -= OnMagnetometerMeasurementValueChanged;
+                sensor.GyroscopeMeasurementValueChanged -= OnGyroscopeMeasurementValueChanged;
+                sensor.AccelerometerMeasurementValueChanged -= OnAccelerometerMeasurementValueChanged;
+                sensor.IRTemperatureMeasurementValueChanged -= OnIRTemperatureMeasurementValueChanged;
+                sensor.ButtonValueChanged -= OnButtonValueChanged;
             }
         }
 
-        private async Task ConnectButtonService()
+        void OnSensorPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (_buttonService == null)
+            var nowait = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(() =>
             {
-                _buttonService = new BleButtonService();
-                _buttonService.Error += OnServiceError;
-
-                if (await _buttonService.ConnectAsync())
+                if (e.PropertyName == "DeviceName")
                 {
-                    DeviceName.Text = "" + _buttonService.DeviceName;
-                    _buttonService.ButtonValueChanged += OnButtonValueChanged;
-                    _buttonService.ConnectionChanged += OnConnectionChanged;
+                    DeviceName.Text = sensor.DeviceName;
                 }
-            }
+            }));
         }
 
-        private void OnButtonValueChanged(object sender, SensorButtonEventArgs e)
+        void OnButtonValueChanged(object sender, SensorButtonEventArgs e)
         {
             string caption = "";
             if (e.LeftButtonDown)
@@ -144,112 +133,16 @@ namespace SensorTag
             }
             var nowait = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(() =>
             {
-                Buttons.Text = caption;
+                GetTile("Buttons").SensorValue = caption;
             }));
         }
 
-        private async Task ConnectAccelerometerService()
+        void OnStatusChanged(object sender, string status)
         {
-            if (_accelService == null)
-            {
-                _accelService = new BleAccelerometerService();
-                _accelService.Error += OnServiceError;
-
-                if (await _accelService.ConnectAsync())
-                {
-                    DeviceName.Text = "" + _accelService.DeviceName;
-                    _accelService.AccelerometerMeasurementValueChanged += OnAccelerometerMeasurementValueChanged;
-                    _accelService.ConnectionChanged += OnConnectionChanged;
-                    _accelService.StartReading();
-                    _accelService.SetPeriod(100); // 10 times a second.
-
-                    int interval = await _accelService.GetPeriod();
-                    Debug.WriteLine("Reading acceleration every " + interval + "ms");
-                }
-            }
+            DisplayMessage(status);
         }
 
-        private async Task ConnectGyroscopeService()
-        {
-            if (_gyroService == null)
-            {
-                _gyroService = new BleGyroscopeService();
-                _gyroService.Error += OnServiceError;
-
-                if (await _gyroService.ConnectAsync())
-                {
-                    DeviceName.Text = "" + _gyroService.DeviceName;
-                    _gyroService.GyroscopeMeasurementValueChanged += OnGyroscopeMeasurementValueChanged;
-                    _gyroService.ConnectionChanged += OnConnectionChanged;
-                    _gyroService.StartReading(GyroscopeAxes.XYZ);
-
-                }
-            }
-        }
-
-
-        private async Task ConnectMagnetometerService()
-        {
-            if (_magService == null)
-            {
-                _magService = new BleMagnetometerService();
-                _magService.Error += OnServiceError;
-
-                if (await _magService.ConnectAsync())
-                {
-                    DeviceName.Text = "" + _magService.DeviceName;
-                    _magService.MagnetometerMeasurementValueChanged += OnMagnetometerMeasurementValueChanged;
-                    _magService.ConnectionChanged += OnConnectionChanged;
-                    _magService.StartReading();
-
-                    int interval = await _magService.GetPeriod();
-                    Debug.WriteLine("Reading magnetometer every " + interval + "ms");
-                }
-            }
-        }
-
-        private async Task ConnectHumidityService()
-        {
-            if (_humidityService == null)
-            {
-                _humidityService = new BleHumidityService();
-                _humidityService.Error += OnServiceError;
-
-                if (await _humidityService.ConnectAsync())
-                {
-                    DeviceName.Text = "" + _humidityService.DeviceName;
-                    _humidityService.HumidityMeasurementValueChanged += OnHumidityMeasurementValueChanged;
-                    _humidityService.ConnectionChanged += OnConnectionChanged;
-                    _humidityService.StartReading();
-                }
-            }
-        }
-
-
-        private async Task ConnectBarometerService()
-        {
-            if (_barometerService == null)
-            {
-                _barometerService = new BleBarometerService();
-                _barometerService.Error += OnServiceError;
-
-                if (await _barometerService.ConnectAsync())
-                {
-                    DeviceName.Text = "" + _barometerService.DeviceName;
-                    BarometricPressure.Text = "calibrating...";
-                    _barometerService.ConnectionChanged += OnConnectionChanged;
-                    await _barometerService.StartCalibration();
-                    _barometerService.BarometerMeasurementValueChanged += OnBarometerMeasurementValueChanged;
-                }
-            }
-        }
-
-        private double Fahrenheit(double celcius)
-        {
-            return 32.0 + (celcius * 9) / 5;
-        }
-
-        private void OnIRTemperatureMeasurementValueChanged(object sender, IRTemperatureMeasurementEventArgs e)
+        void OnIRTemperatureMeasurementValueChanged(object sender, IRTemperatureMeasurementEventArgs e)
         {
             var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
             {
@@ -258,7 +151,9 @@ namespace SensorTag
                 const double fudge = 5;
                 double temp = e.Measurement.ObjectTemperature + fudge;
 
-                IRTemp.Text = Math.Round(temp, 3) + " C,  " + Math.Round(Fahrenheit(temp), 3) + "F";
+                string caption = Math.Round(temp, 3) + " C,  " + Math.Round(temp.ToFahrenheit(), 3) + "F";
+
+                GetTile("IR Temperature").SensorValue = caption;
                 connected = true;
             }));
         }
@@ -268,30 +163,39 @@ namespace SensorTag
             var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
             {
                 var m = e.Measurement;
-
-                Accelerometer.Text = Math.Round(m.X, 3) + "," + Math.Round(m.Y, 3) + "," + Math.Round(m.Z, 3);
+                string caption = Math.Round(m.X, 3) + "," + Math.Round(m.Y, 3) + "," + Math.Round(m.Z, 3); 
+                GetTile("Accelerometer").SensorValue = caption;
                 connected = true;
             }));
         }
 
-        private void OnGyroscopeMeasurementValueChanged(object sender, GyroscopeMeasurementEventArgs e)
+        private TileModel GetTile(string name)
+        {
+            return (from t in tiles where t.Caption == name select t).FirstOrDefault();
+        }
+
+        void OnGyroscopeMeasurementValueChanged(object sender, GyroscopeMeasurementEventArgs e)
         {
             var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
             {
                 var m = e.Measurement;
 
-                Gyroscope.Text = Math.Round(m.X, 3) + "," + Math.Round(m.Y, 3) + "," + Math.Round(m.Z, 3);
+                string caption = Math.Round(m.X, 3) + "," + Math.Round(m.Y, 3) + "," + Math.Round(m.Z, 3);
+
+                GetTile("Gyroscope").SensorValue = caption;
                 connected = true;
             }));
         }
 
-        private void OnMagnetometerMeasurementValueChanged(object sender, MagnetometerMeasurementEventArgs e)
+        void OnMagnetometerMeasurementValueChanged(object sender, MagnetometerMeasurementEventArgs e)
         {
             var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
             {
                 var m = e.Measurement;
 
-                Magnetometer.Text = Math.Round(m.X, 3) + "," + Math.Round(m.Y, 3) + "," + Math.Round(m.Z, 3);
+                string caption = Math.Round(m.X, 3) + "," + Math.Round(m.Y, 3) + "," + Math.Round(m.Z, 3);
+
+                GetTile("Magnetometer").SensorValue = caption;
                 connected = true;
             }));
         }
@@ -302,20 +206,71 @@ namespace SensorTag
             {
                 var m = e.Measurement;
 
-                Humidity.Text = Math.Round(m.Humidity, 3) + " %rH, " + Math.Round(m.Temperature, 3) + " °C";
+                string caption = Math.Round(m.Humidity, 3) + " %rH"; // +Math.Round(m.Temperature, 3) + " °C";
+
+                GetTile("Humidity").SensorValue = caption;
                 connected = true;
             }));
         }
-        private void OnBarometerMeasurementValueChanged(object sender, BarometerMeasurementEventArgs e)
+
+        void OnBarometerMeasurementValueChanged(object sender, BarometerMeasurementEventArgs e)
         {
             var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
             {
                 var m = e.Measurement;
 
-                BarometricPressure.Text = Math.Round(m.HectoPascals, 3) + " hPa";
+                string caption = Math.Round(m.HectoPascals, 3) + " hPa";
+
+                GetTile("Barometer").SensorValue = caption;
                 connected = true;
             }));
         }
+
+        void OnServiceError(object sender, string message)
+        {
+            DisplayMessage(message);
+        }
+
+        private void Clear()
+        {
+            foreach (var tile in tiles)
+            {
+                tile.SensorValue = "";
+            }
+        }
+
+        /// <summary>
+        /// Invoked when this page is about to be displayed in a Frame.
+        /// </summary>
+        /// <param name="e">Event data that describes how this page was reached.  The Parameter
+        /// property is typically used to configure the page.</param>
+        protected async override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            active = true;
+            await sensor.Reconnect();
+            if (active)
+            {
+                RegisterEvents(true);
+            }
+        }
+
+        private void StartTimer()
+        {
+            _timer = new DispatcherTimer();
+            _timer.Interval = TimeSpan.FromSeconds(10);
+            _timer.Tick += OnTimerTick;
+            _timer.Start();
+        }
+
+        private void StopTimer()
+        {
+            if (_timer != null)
+            {
+                _timer.Tick -= OnTimerTick;
+                _timer.Stop();
+            }
+        }
+
 
         void OnTimerTick(object sender, object e)
         {
@@ -328,20 +283,23 @@ namespace SensorTag
             }
         }
 
-        private void OnServiceError(object sender, string message)
-        {
-            DisplayMessage(message);
-        }
-
         private void DisplayMessage(string message)
         {
             var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
             {
-                ErrorMessage.Text = message;
-                Scroller.ChangeView(null, Scroller.ScrollableHeight, null);
+                ErrorMessage.Text = message;                
             }));
         }
 
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            active = false;
+            RegisterEvents(false);
+            base.OnNavigatedFrom(e);
+        }
+
+        bool active;
         bool connected;
 
         void OnConnectionChanged(object sender, ConnectionChangedEventArgs e)
@@ -371,124 +329,28 @@ namespace SensorTag
             connected = e.IsConnected;
         }
 
-        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        private void OnTileClick(object sender, EventArgs e)
         {
-            Disconnect();
-            base.OnNavigatedFrom(e);
+            TileControl button = (TileControl)sender;
+            TileModel model = (TileModel)button.DataContext;
+            if (model.Caption == "Barometer")
+            {
+                this.Frame.Navigate(typeof(PressurePage));
+            }
         }
 
-        internal void Disconnect()
+        public void OnVisibilityChanged(bool visible)
         {
-            if (_tempService != null)
+            if (visible)
             {
-                using (_tempService)
-                {
-                    _tempService.Error -= OnServiceError;
-                    _tempService.IRTemperatureMeasurementValueChanged -= OnIRTemperatureMeasurementValueChanged;
-                    _tempService.ConnectionChanged -= OnConnectionChanged;
-                    _tempService = null;
-                }
+                active = true;
+                var nowait = sensor.Reconnect();
             }
-            if (_buttonService != null)
+            else
             {
-                using (_buttonService)
-                {
-                    _buttonService.Error -= OnServiceError;
-                    _buttonService.ButtonValueChanged -= OnButtonValueChanged;
-                    _buttonService.ConnectionChanged -= OnConnectionChanged;
-                    _buttonService = null;
-                }
-            }
-            if (_accelService != null)
-            {
-                {
-                    _accelService.Error -= OnServiceError;
-                    _accelService.AccelerometerMeasurementValueChanged -= OnAccelerometerMeasurementValueChanged;
-                    _accelService.ConnectionChanged -= OnConnectionChanged;
-                    _accelService = null;
-                }
-            }
-
-            if (_gyroService != null)
-            {
-                using (_gyroService)
-                {
-                    _gyroService.Error -= OnServiceError;
-                    _gyroService.GyroscopeMeasurementValueChanged -= OnGyroscopeMeasurementValueChanged;
-                    _gyroService.ConnectionChanged -= OnConnectionChanged;
-                    _gyroService = null;
-                }
-            }
-            if (_magService != null)
-            {
-                using (_magService)
-                {
-                    _magService.Error -= OnServiceError;
-                    _magService.MagnetometerMeasurementValueChanged -= OnMagnetometerMeasurementValueChanged;
-                    _magService.ConnectionChanged -= OnConnectionChanged;
-                    _magService = null;
-                }
-            }
-
-            if (_humidityService != null)
-            {
-                using (_humidityService)
-                {
-                    _humidityService.Error -= OnServiceError;
-                    _humidityService.HumidityMeasurementValueChanged -= OnHumidityMeasurementValueChanged;
-                    _humidityService.ConnectionChanged -= OnConnectionChanged;
-                    _humidityService = null;
-                }
-            }
-
-            if (_barometerService != null)
-            {
-                using (_barometerService)
-                {
-                    _barometerService.Error -= OnServiceError;
-                    _barometerService.BarometerMeasurementValueChanged -= OnBarometerMeasurementValueChanged;
-                    _barometerService.ConnectionChanged -= OnConnectionChanged;
-                    _barometerService = null;
-                }
-            }
-            if (_timer != null)
-            {
-                _timer.Tick -= OnTimerTick;
-                _timer.Stop();
-            }
-
-        }
-
-        bool connecting;
-
-        internal async void Reconnect()
-        {
-            if (!connecting)
-            {
-                try
-                {
-                    connecting = true;
-                    DisplayMessage("connecting...");
-                    await ConnectIRTemperatureService();
-                    await ConnectButtonService();
-                    await ConnectAccelerometerService();
-                    await ConnectGyroscopeService();
-                    await ConnectMagnetometerService();
-                    await ConnectHumidityService();
-                    await ConnectBarometerService();
-                    DisplayMessage("connected");
-                    StartTimer();
-                }
-                catch (Exception ex)
-                {
-
-                    DisplayMessage(ex.Message);
-                }
-                finally
-                {
-                    connecting = false;
-                }
-
+                // we are leaving the app, so disconnect the bluetooth services so other apps can use them.
+                active = false;
+                sensor.Disconnect();
             }
         }
     }
