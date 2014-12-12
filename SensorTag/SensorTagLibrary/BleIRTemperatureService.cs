@@ -53,6 +53,10 @@ namespace SensorTag
             }
         }
 
+#if FALSE
+
+        // the documentation lies, the IR temp has no period characteristic
+
         /// <summary>
         /// Get the rate at which accelerometer is being polled, in milliseconds.  
         /// </summary>
@@ -77,6 +81,7 @@ namespace SensorTag
 
             await WriteCharacteristicByte(IRTemperatureCharacteristicPeriodUuid, (byte)delay);
         }
+#endif 
 
         public async void StartReading()
         {

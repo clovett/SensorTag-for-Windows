@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SensorTagLibrary", "SensorT
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SensorTag.Windows", "SensorTag.Windows\SensorTag.Windows.csproj", "{B6C91496-F435-49C2-A851-4C8E8D780823}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedControls", "SharedControls\SharedControls.csproj", "{F22119A4-141D-426E-8653-E41599E03099}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -109,6 +111,22 @@ Global
 		{B6C91496-F435-49C2-A851-4C8E8D780823}.Release|x86.ActiveCfg = Release|x86
 		{B6C91496-F435-49C2-A851-4C8E8D780823}.Release|x86.Build.0 = Release|x86
 		{B6C91496-F435-49C2-A851-4C8E8D780823}.Release|x86.Deploy.0 = Release|x86
+		{F22119A4-141D-426E-8653-E41599E03099}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F22119A4-141D-426E-8653-E41599E03099}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F22119A4-141D-426E-8653-E41599E03099}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{F22119A4-141D-426E-8653-E41599E03099}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{F22119A4-141D-426E-8653-E41599E03099}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{F22119A4-141D-426E-8653-E41599E03099}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{F22119A4-141D-426E-8653-E41599E03099}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F22119A4-141D-426E-8653-E41599E03099}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F22119A4-141D-426E-8653-E41599E03099}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F22119A4-141D-426E-8653-E41599E03099}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F22119A4-141D-426E-8653-E41599E03099}.Release|ARM.ActiveCfg = Release|Any CPU
+		{F22119A4-141D-426E-8653-E41599E03099}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{F22119A4-141D-426E-8653-E41599E03099}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{F22119A4-141D-426E-8653-E41599E03099}.Release|Win32.ActiveCfg = Release|Any CPU
+		{F22119A4-141D-426E-8653-E41599E03099}.Release|x64.ActiveCfg = Release|Any CPU
+		{F22119A4-141D-426E-8653-E41599E03099}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

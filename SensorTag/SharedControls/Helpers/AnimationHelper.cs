@@ -8,7 +8,7 @@ using Windows.UI.Xaml.Media.Animation;
 
 namespace SensorTag
 {
-    static class AnimationHelper
+    public static class AnimationHelper
     {
         public static Storyboard BeginAnimation(this UIElement element, Timeline animation, string targetProperty, EventHandler<object> completionHandler)
         {

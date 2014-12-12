@@ -102,6 +102,10 @@ namespace SensorTag
 
         public event EventHandler Calibrated;
 
+#if FALSE  
+        
+        // the documentation lies, the baromometer service has no Period characteristic.
+
         /// <summary>
         /// Get the rate at which sensor is being polled, in milliseconds.  
         /// </summary>
@@ -117,7 +121,7 @@ namespace SensorTag
         /// The period ranges for 100 ms to 2.55 seconds, resolution 10 ms.
         /// </summary>
         /// <param name="milliseconds">The delay between updates, accurate only to 10ms intervals. </param>
-        public async void SetPeriod(int milliseconds)
+        public async Task SetPeriod(int milliseconds)
         {
             int delay = milliseconds / 10;
             if (delay < 0)
@@ -126,7 +130,7 @@ namespace SensorTag
             }
             await WriteCharacteristicByte(BarometerCharacteristicPeriodUuid, (byte)delay);
         }
-
+#endif
 
         private void OnBarometerMeasurementValueChanged(BarometerMeasurementEventArgs args)
         {

@@ -85,20 +85,14 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="AnimationHelper.cs" />
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Common\ConversionExtensions.cs" />
-    <Compile Include="Common\IWindowVisibilityWatcher.cs" />
-    <Compile Include="Common\TileControl.xaml.cs">
-      <DependentUpon>TileControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Common\TileModel.cs" />
-    <Compile Include="Common\TiltContentControl.cs" />
-    <Compile Include="Common\XamlHelpers.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\AccelerometerPage.xaml.cs">
+      <DependentUpon>AccelerometerPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\PressurePage.xaml.cs">
       <DependentUpon>PressurePage.xaml</DependentUpon>
@@ -134,13 +128,13 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Common\TileControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\AccelerometerPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Pages\PressurePage.xaml">
       <SubType>Designer</SubType>
@@ -151,6 +145,10 @@
     <ProjectReference Include="..\SensorTagLibrary\SensorTagLibrary.csproj">
       <Project>{702df202-1cfe-456d-9df9-5e4e4daa02a4}</Project>
       <Name>SensorTagLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SharedControls\SharedControls.csproj">
+      <Project>{F22119A4-141D-426E-8653-E41599E03099}</Project>
+      <Name>SharedControls</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '12.0' ">

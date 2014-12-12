@@ -1,24 +1,28 @@
 ﻿<Page
-    x:Class="SensorTag.Pages.PressurePage"
+    x:Class="SensorTag.Pages.AccelerometerPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:SensorTag.Pages"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    xmlns:tk="using:WinRTXamlToolkit.Controls"
+    xmlns:c="using:SensorTag.Controls"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Page.Resources>
         <Style TargetType="TextBlock">
             <Setter Property="FontSize" Value="18"/>
         </Style>
+        <Style TargetType="c:ScrollingGraph">
+
+            <Setter Property="Minimum" Value="-2"/>
+            <Setter Property="Maximum" Value="2"/>
+            <Setter Property="ScrollSpeed" Value="30"/>
+        </Style>
     </Page.Resources>
     <Grid>
 
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
@@ -35,24 +39,28 @@
                          Margin="10,6,10,0"  
                         />
 
-            <TextBlock Text="Barometric Pressure" FontSize="24" Grid.Column="1"
+            <TextBlock Text="Accelerometer" FontSize="36" Grid.Column="1"
                        TextWrapping="Wrap" Margin="10,10,10,0"/>
 
         </Grid>
 
-        <!--<Slider x:Name="SensitivitySlider" Grid.Row="1" Margin="10,10,10,0" Header="Sensitivity"
-                Minimum="10" Maximum="255" Value="100"/>-->
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-        <ComboBox x:Name="UnitCombo" Grid.Row="2" Margin="10" Header="Units:"
-                  SelectionChanged="OnUnitChanged">
-        </ComboBox>
+            <Slider x:Name="SensitivitySlider" Grid.Row="0" Margin="10,10,10,0" Header="Sensitivity"
+                Minimum="100" Maximum="2550" Value="100"/>
 
-        <TextBlock x:Name="ValueText" FontSize="72" Text="" 
-                    VerticalAlignment="Center" HorizontalAlignment="Center"
-                    Grid.Row="3"         
-                       />
-
-        <TextBlock x:Name="Message" Grid.Row="4" Margin="3" Foreground="Salmon"
+            <c:ScrollingGraph x:Name="XAxis" Grid.Row="1" StrokeThickness="2" Stroke="Red"/>
+            <c:ScrollingGraph x:Name="YAxis" Grid.Row="2" StrokeThickness="2" Stroke="Green"/>
+            <c:ScrollingGraph x:Name="ZAxis" Grid.Row="3" StrokeThickness="2" Stroke="LightBlue"/>
+        </Grid>
+        
+        <TextBlock x:Name="Message" Grid.Row="2" Margin="3" Foreground="Salmon"
                    TextWrapping="Wrap"/>
     </Grid>
 </Page>

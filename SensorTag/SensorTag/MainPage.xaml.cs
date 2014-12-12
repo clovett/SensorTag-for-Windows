@@ -89,23 +89,42 @@ namespace SensorTag
         {
             if (register)
             {
-                sensor.BarometerMeasurementValueChanged += OnBarometerMeasurementValueChanged;
-                sensor.HumidityMeasurementValueChanged += OnHumidityMeasurementValueChanged;
-                sensor.MagnetometerMeasurementValueChanged += OnMagnetometerMeasurementValueChanged;
-                sensor.GyroscopeMeasurementValueChanged += OnGyroscopeMeasurementValueChanged;
-                sensor.AccelerometerMeasurementValueChanged += OnAccelerometerMeasurementValueChanged;
-                sensor.IRTemperatureMeasurementValueChanged += OnIRTemperatureMeasurementValueChanged;
-                sensor.ButtonValueChanged += OnButtonValueChanged;
+                sensor.Barometer.BarometerMeasurementValueChanged -= OnBarometerMeasurementValueChanged;
+                sensor.Barometer.BarometerMeasurementValueChanged += OnBarometerMeasurementValueChanged;
+                sensor.Barometer.StartReading();
+                sensor.Humidity.HumidityMeasurementValueChanged -= OnHumidityMeasurementValueChanged;
+                sensor.Humidity.HumidityMeasurementValueChanged += OnHumidityMeasurementValueChanged;
+                sensor.Humidity.StartReading();
+                sensor.Magnetometer.MagnetometerMeasurementValueChanged -= OnMagnetometerMeasurementValueChanged;
+                sensor.Magnetometer.MagnetometerMeasurementValueChanged += OnMagnetometerMeasurementValueChanged;
+                sensor.Magnetometer.StartReading(); ;
+                sensor.Gyroscope.GyroscopeMeasurementValueChanged -= OnGyroscopeMeasurementValueChanged;
+                sensor.Gyroscope.GyroscopeMeasurementValueChanged += OnGyroscopeMeasurementValueChanged;
+                sensor.Gyroscope.StartReading(GyroscopeAxes.XYZ);
+                sensor.Accelerometer.AccelerometerMeasurementValueChanged -= OnAccelerometerMeasurementValueChanged;
+                sensor.Accelerometer.AccelerometerMeasurementValueChanged += OnAccelerometerMeasurementValueChanged;
+                sensor.Accelerometer.StartReading();
+                sensor.IRTemperature.IRTemperatureMeasurementValueChanged -= OnIRTemperatureMeasurementValueChanged;
+                sensor.IRTemperature.IRTemperatureMeasurementValueChanged += OnIRTemperatureMeasurementValueChanged;
+                sensor.IRTemperature.StartReading();
+                sensor.Buttons.ButtonValueChanged -= OnButtonValueChanged;
+                sensor.Buttons.ButtonValueChanged += OnButtonValueChanged;
             }
             else
             {
-                sensor.BarometerMeasurementValueChanged -= OnBarometerMeasurementValueChanged;
-                sensor.HumidityMeasurementValueChanged -= OnHumidityMeasurementValueChanged;
-                sensor.MagnetometerMeasurementValueChanged -= OnMagnetometerMeasurementValueChanged;
-                sensor.GyroscopeMeasurementValueChanged -= OnGyroscopeMeasurementValueChanged;
-                sensor.AccelerometerMeasurementValueChanged -= OnAccelerometerMeasurementValueChanged;
-                sensor.IRTemperatureMeasurementValueChanged -= OnIRTemperatureMeasurementValueChanged;
-                sensor.ButtonValueChanged -= OnButtonValueChanged;
+                sensor.Barometer.BarometerMeasurementValueChanged -= OnBarometerMeasurementValueChanged;
+                sensor.Barometer.StopReading();
+                sensor.Humidity.HumidityMeasurementValueChanged -= OnHumidityMeasurementValueChanged;
+                sensor.Humidity.StopReading();
+                sensor.Magnetometer.MagnetometerMeasurementValueChanged -= OnMagnetometerMeasurementValueChanged;
+                sensor.Magnetometer.StopReading();
+                sensor.Gyroscope.GyroscopeMeasurementValueChanged -= OnGyroscopeMeasurementValueChanged;
+                sensor.Gyroscope.StopReading();
+                sensor.Accelerometer.AccelerometerMeasurementValueChanged -= OnAccelerometerMeasurementValueChanged;
+                sensor.Accelerometer.StopReading();
+                sensor.IRTemperature.IRTemperatureMeasurementValueChanged -= OnIRTemperatureMeasurementValueChanged;
+                sensor.IRTemperature.StopReading();
+                sensor.Buttons.ButtonValueChanged -= OnButtonValueChanged;
             }
         }
 
@@ -256,10 +275,13 @@ namespace SensorTag
 
         private void StartTimer()
         {
-            _timer = new DispatcherTimer();
-            _timer.Interval = TimeSpan.FromSeconds(10);
-            _timer.Tick += OnTimerTick;
-            _timer.Start();
+            if (_timer == null)
+            {
+                _timer = new DispatcherTimer();
+                _timer.Interval = TimeSpan.FromSeconds(10);
+                _timer.Tick += OnTimerTick;
+                _timer.Start();
+            }
         }
 
         private void StopTimer()
@@ -268,6 +290,7 @@ namespace SensorTag
             {
                 _timer.Tick -= OnTimerTick;
                 _timer.Stop();
+                _timer = null;
             }
         }
 
@@ -295,7 +318,7 @@ namespace SensorTag
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             active = false;
-            RegisterEvents(false);
+            //RegisterEvents(false);
             base.OnNavigatedFrom(e);
         }
 
@@ -336,6 +359,10 @@ namespace SensorTag
             if (model.Caption == "Barometer")
             {
                 this.Frame.Navigate(typeof(PressurePage));
+            } 
+            else if (model.Caption == "Accelerometer")
+            {
+                this.Frame.Navigate(typeof(AccelerometerPage));
             }
         }
 

@@ -100,7 +100,7 @@ namespace SensorTag
         /// Set the rate at which accelerometer is being polled, in milliseconds.  
         /// </summary>
         /// <param name="milliseconds">The delay between updates, accurate only to 10ms intervals. </param>
-        public async void SetPeriod(int milliseconds)
+        public async Task SetPeriod(int milliseconds)
         {
             int delay = milliseconds / 10;
             if (delay < 0)

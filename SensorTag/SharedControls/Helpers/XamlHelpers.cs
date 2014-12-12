@@ -8,7 +8,7 @@ using Windows.UI.Xaml.Media;
 
 namespace SensorTag
 {
-    static class XamlHelpers
+    public static class XamlHelpers
     {
         public static T FindDescendant<T>(this DependencyObject e) where T: class
         {

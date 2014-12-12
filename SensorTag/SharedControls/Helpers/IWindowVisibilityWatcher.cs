@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SensorTag
 {
-    interface IWindowVisibilityWatcher
+    public interface IWindowVisibilityWatcher
     {
         void OnVisibilityChanged(bool visible);
     }
