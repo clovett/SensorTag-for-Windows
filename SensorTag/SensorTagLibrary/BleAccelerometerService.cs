@@ -99,16 +99,17 @@ namespace SensorTag
         /// <summary>
         /// Set the rate at which accelerometer is being polled, in milliseconds.  
         /// </summary>
-        /// <param name="milliseconds">The delay between updates, accurate only to 10ms intervals. </param>
+        /// <param name="milliseconds">The delay between updates, accurate only to 10ms intervals. Maximum value is 2550.</param>
         public async Task SetPeriod(int milliseconds)
         {
             int delay = milliseconds / 10;
-            if (delay < 0)
+            byte p = (byte)delay;
+            if (p < 1)
             {
-                delay = 1;
+                p = 1;
             }
 
-            await WriteCharacteristicByte(AccelerometerCharacteristicPeriodUuid, (byte)delay);
+            await WriteCharacteristicByte(AccelerometerCharacteristicPeriodUuid, p);
         }
 
         private void OnAccelerationMeasurementValueChanged(AccelerometerMeasurementEventArgs args)

@@ -57,7 +57,6 @@ namespace SensorTag
             sensor.StatusChanged += OnStatusChanged;
             sensor.PropertyChanged += OnSensorPropertyChanged;
             sensor.ConnectionChanged += OnConnectionChanged;
-            SensorList.ItemsSource = tiles;
 
             SensorList.AddHandler(PointerMovedEvent, new PointerEventHandler(Bubble_PointerMoved), false);
         }
@@ -78,9 +77,13 @@ namespace SensorTag
                 if (previous != null)
                 {
                     Point past = previous.Value;
-                    scroller.ChangeView(scroller.HorizontalOffset + past.X - pos.X, scroller.VerticalOffset + past.Y - pos.Y, null);
+                    double dx = past.X - pos.X;
+                    double dy = past.Y - pos.Y;
+                    Debug.WriteLine(dy);
+                    scroller.ChangeView(scroller.HorizontalOffset + dx, scroller.VerticalOffset + dy, null);
                 }
                 previous = pos;
+                e.Handled = true;
             }
         }
 
@@ -210,12 +213,18 @@ namespace SensorTag
         {
             var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
             {
-                var m = e.Measurement;
+                try
+                {
+                    var m = e.Measurement;
 
-                string caption = Math.Round(m.X, 3) + "," + Math.Round(m.Y, 3) + "," + Math.Round(m.Z, 3);
+                    string caption = Math.Round(m.X, 3) + "," + Math.Round(m.Y, 3) + "," + Math.Round(m.Z, 3);
 
-                GetTile("Magnetometer").SensorValue = caption;
-                connected = true;
+                    GetTile("Magnetometer").SensorValue = caption;
+                    connected = true;
+                }
+                catch
+                {
+                }
             }));
         }
 
@@ -270,6 +279,10 @@ namespace SensorTag
             if (active)
             {
                 RegisterEvents(true);
+
+                SensorList.ItemsSource = tiles;
+
+                await sensor.Accelerometer.SetPeriod(1000); // save battery
             }
         }
 
@@ -356,13 +369,29 @@ namespace SensorTag
         {
             TileControl button = (TileControl)sender;
             TileModel model = (TileModel)button.DataContext;
-            if (model.Caption == "Barometer")
+            switch (model.Caption)
             {
-                this.Frame.Navigate(typeof(PressurePage));
-            } 
-            else if (model.Caption == "Accelerometer")
-            {
-                this.Frame.Navigate(typeof(AccelerometerPage));
+                case "Barometer":
+                    this.Frame.Navigate(typeof(PressurePage));
+                    break;
+                case "Accelerometer":
+                    this.Frame.Navigate(typeof(AccelerometerPage));
+                    break;
+                case "Gyroscope":
+                    this.Frame.Navigate(typeof(GyroPage));
+                    break;
+                case "Humidity":
+                    this.Frame.Navigate(typeof(HumidityPage));
+                    break;
+                case "IR Temperature":
+                    this.Frame.Navigate(typeof(TemperaturePage));
+                    break;
+                case "Magnetometer":
+                    this.Frame.Navigate(typeof(MagnetometerPage));
+                    break;
+                case "Buttons":
+                    this.Frame.Navigate(typeof(ButtonPage));
+                    break;
             }
         }
 

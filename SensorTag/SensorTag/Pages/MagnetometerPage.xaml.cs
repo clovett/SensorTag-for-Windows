@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -12,6 +13,7 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
@@ -21,20 +23,14 @@ namespace SensorTag.Pages
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class PressurePage : Page, IWindowVisibilityWatcher
+    public sealed partial class MagnetometerPage : Page, IWindowVisibilityWatcher
     {
         SensorTag sensor;
-        //int? period;
         DispatcherTimer _timer;
-        string selectedUnit;
 
-        public PressurePage()
+        public MagnetometerPage()
         {
             this.InitializeComponent();
-
-            string[] units = new string[] { "hectopascal", "pascal", "bar", "millibar", "kilopascal", "Mercury (mm)", "Mercury (inches)", "psi" };
-            UnitCombo.ItemsSource = units;
-            UnitCombo.SelectedIndex = 0;
 
             sensor = SensorTag.Instance;
         }
@@ -49,10 +45,8 @@ namespace SensorTag.Pages
             ShowMessage("Connecting...");
             try
             {
-                sensor.Barometer.BarometerMeasurementValueChanged += OnBarometerMeasurementValueChanged;
-                sensor.Barometer.StartReading();
-                //period = await sensor.Barometer.GetPeriod();
-                //SensitivitySlider.Value = period.Value;
+                sensor.Magnetometer.MagnetometerMeasurementValueChanged += Magnetometer_MagnetometerMeasurementValueChanged;
+                sensor.Magnetometer.StartReading();
                 ShowMessage("");
             }
             catch (Exception ex) {
@@ -61,7 +55,6 @@ namespace SensorTag.Pages
 
         }
 
-
         private void ShowMessage(string msg)
         {
             var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
@@ -69,44 +62,19 @@ namespace SensorTag.Pages
                 Message.Text = msg;
             }));
         }
+
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            sensor.Barometer.BarometerMeasurementValueChanged -= OnBarometerMeasurementValueChanged;
+            sensor.Magnetometer.MagnetometerMeasurementValueChanged -= Magnetometer_MagnetometerMeasurementValueChanged;
             sensor.Barometer.StopReading();
             base.OnNavigatedFrom(e);
         }
 
-        string caption;
+        MagnetometerMeasurement measurement;
 
-        private void OnBarometerMeasurementValueChanged(object sender, BarometerMeasurementEventArgs e)
+        void Magnetometer_MagnetometerMeasurementValueChanged(object sender, MagnetometerMeasurementEventArgs e)
         {
-            switch (selectedUnit)
-            {
-                case "hectopascal":
-                    caption = GetCaption(e.Measurement.HectoPascals);
-                    break;
-                case "pascal":
-                    caption = GetCaption(e.Measurement.Pascals);
-                    break;
-                case "bar":
-                    caption = GetCaption(e.Measurement.Bars);
-                    break;
-                case "millibar":
-                    caption = GetCaption(e.Measurement.MilliBars);
-                    break;
-                case "kilopascal":
-                    caption = GetCaption(e.Measurement.KiloPascals);
-                    break;
-                case "Mercury (mm)":
-                    caption = GetCaption(e.Measurement.HgMm);
-                    break;
-                case "Mercury (inches)":
-                    caption = GetCaption(e.Measurement.HgInches);
-                    break;
-                case "psi":
-                    caption = GetCaption(e.Measurement.Psi);
-                    break;
-            }
+            measurement = e.Measurement;
 
             if (_timer == null)
             {
@@ -131,12 +99,12 @@ namespace SensorTag.Pages
         {
             if (visible)
             {
-                sensor.Barometer.BarometerMeasurementValueChanged += OnBarometerMeasurementValueChanged;
+                sensor.Magnetometer.MagnetometerMeasurementValueChanged += Magnetometer_MagnetometerMeasurementValueChanged;
                 sensor.Barometer.StartReading();
             }
             else
             {
-                sensor.Barometer.BarometerMeasurementValueChanged -= OnBarometerMeasurementValueChanged;
+                sensor.Magnetometer.MagnetometerMeasurementValueChanged -= Magnetometer_MagnetometerMeasurementValueChanged;
                 sensor.Barometer.StopReading();
             }
         }
@@ -151,33 +119,12 @@ namespace SensorTag.Pages
             }
         }
 
-        //bool updatingPeriod;
-
         private void OnTimerTick(object sender, object e)
         {
-            //if (period.HasValue && (int)SensitivitySlider.Value != period && !updatingPeriod)
-            //{
-            //    updatingPeriod = true;
-            //    period = (int)SensitivitySlider.Value;
-            //    Task.Run(new Action(UpdatePeriod));
-            //}
-
-            if (ValueText.Text != caption)
-            {
-                ValueText.Text = caption;
-            }
-
+            AnimationHelper.BeginAnimation(XCompass, new DoubleAnimation() { Duration = new Duration(TimeSpan.FromMilliseconds(100)), To = measurement.X, EnableDependentAnimation = true }, "Angle", null);
+            AnimationHelper.BeginAnimation(YCompass, new DoubleAnimation() { Duration = new Duration(TimeSpan.FromMilliseconds(100)), To = measurement.Y, EnableDependentAnimation = true }, "Angle", null);
+            AnimationHelper.BeginAnimation(ZCompass, new DoubleAnimation() { Duration = new Duration(TimeSpan.FromMilliseconds(100)), To = measurement.Z, EnableDependentAnimation = true }, "Angle", null);
         }
-
-        //async void UpdatePeriod()
-        //{
-        //    try
-        //    {
-        //        await sensor.Barometer.SetPeriod(period.Value);
-        //    }
-        //    catch { }
-        //    updatingPeriod = false;
-        //}
 
         private void StopTimer()
         {
@@ -187,11 +134,6 @@ namespace SensorTag.Pages
                 _timer.Stop();
                 _timer = null;
             }
-        }
-
-        private void OnUnitChanged(object sender, SelectionChangedEventArgs e)
-        {
-            selectedUnit = (string)UnitCombo.SelectedItem;
         }
 
     }

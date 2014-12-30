@@ -88,11 +88,29 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="CompassControl.xaml.cs">
+      <DependentUpon>CompassControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\AccelerometerPage.xaml.cs">
       <DependentUpon>AccelerometerPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\GyroPage.xaml.cs">
+      <DependentUpon>GyroPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\ButtonPage.xaml.cs">
+      <DependentUpon>ButtonPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\IRTemperaturePage.xaml.cs">
+      <DependentUpon>IRTemperaturePage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\HumidityPage.xaml.cs">
+      <DependentUpon>HumidityPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\MagnetometerPage.xaml.cs">
+      <DependentUpon>MagnetometerPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\PressurePage.xaml.cs">
       <DependentUpon>PressurePage.xaml</DependentUpon>
@@ -113,6 +131,7 @@
     <Content Include="Assets\Humidity.png" />
     <Content Include="Assets\IRTemperature.png" />
     <Content Include="Assets\Logo.png" />
+    <Content Include="Assets\SensorTag.png" />
     <Content Include="Assets\SmallLogo.png" />
     <Content Include="Assets\SplashScreen.png" />
     <Content Include="Assets\Logo71.png" />
@@ -128,6 +147,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="CompassControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -135,6 +158,26 @@
     <Page Include="Pages\AccelerometerPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\GyroPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\ButtonPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\IRTemperaturePage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\HumidityPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\MagnetometerPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Pages\PressurePage.xaml">
       <SubType>Designer</SubType>

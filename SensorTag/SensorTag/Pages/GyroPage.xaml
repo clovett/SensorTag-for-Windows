@@ -1,0 +1,60 @@
+﻿<Page
+    x:Class="SensorTag.Pages.GyroPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:SensorTag.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Page.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="FontSize" Value="18"/>
+        </Style>
+    </Page.Resources>
+    <Grid>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid x:Name="TitleGrid" Background="#00b2f0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button x:Name="backButton" Click="OnGoBack"
+                        Style="{StaticResource BackButtonStyle}"
+                         Margin="10,6,10,0"  
+                        />
+
+            <TextBlock Text="Gyrometer" FontSize="36" Grid.Column="1"
+                       TextWrapping="Wrap" Margin="10,10,10,0"/>
+
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Border x:Name="BorderPlane" Width="100" Height="200"
+                    Background="Red"
+                    Grid.Row="1">
+                <Border.Projection>
+                    <PlaneProjection x:Name="BorderProjection" />
+                </Border.Projection>
+            </Border>
+
+        </Grid>
+
+        <TextBlock x:Name="Message" Grid.Row="2" Margin="3" Foreground="Salmon"
+                   TextWrapping="Wrap"/>
+    </Grid>
+</Page>

@@ -21,20 +21,14 @@ namespace SensorTag.Pages
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class PressurePage : Page, IWindowVisibilityWatcher
+    public sealed partial class HumidityPage : Page, IWindowVisibilityWatcher
     {
         SensorTag sensor;
-        //int? period;
         DispatcherTimer _timer;
-        string selectedUnit;
 
-        public PressurePage()
+        public HumidityPage()
         {
             this.InitializeComponent();
-
-            string[] units = new string[] { "hectopascal", "pascal", "bar", "millibar", "kilopascal", "Mercury (mm)", "Mercury (inches)", "psi" };
-            UnitCombo.ItemsSource = units;
-            UnitCombo.SelectedIndex = 0;
 
             sensor = SensorTag.Instance;
         }
@@ -49,10 +43,8 @@ namespace SensorTag.Pages
             ShowMessage("Connecting...");
             try
             {
-                sensor.Barometer.BarometerMeasurementValueChanged += OnBarometerMeasurementValueChanged;
-                sensor.Barometer.StartReading();
-                //period = await sensor.Barometer.GetPeriod();
-                //SensitivitySlider.Value = period.Value;
+                sensor.Humidity.HumidityMeasurementValueChanged += Humidity_HumidityMeasurementValueChanged;
+                sensor.Humidity.StartReading();
                 ShowMessage("");
             }
             catch (Exception ex) {
@@ -71,42 +63,16 @@ namespace SensorTag.Pages
         }
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            sensor.Barometer.BarometerMeasurementValueChanged -= OnBarometerMeasurementValueChanged;
+            sensor.Humidity.HumidityMeasurementValueChanged -= Humidity_HumidityMeasurementValueChanged;
             sensor.Barometer.StopReading();
             base.OnNavigatedFrom(e);
         }
 
-        string caption;
-
-        private void OnBarometerMeasurementValueChanged(object sender, BarometerMeasurementEventArgs e)
+        HumidityMeasurement measurement;
+        
+        void Humidity_HumidityMeasurementValueChanged(object sender, HumidityMeasurementEventArgs e)
         {
-            switch (selectedUnit)
-            {
-                case "hectopascal":
-                    caption = GetCaption(e.Measurement.HectoPascals);
-                    break;
-                case "pascal":
-                    caption = GetCaption(e.Measurement.Pascals);
-                    break;
-                case "bar":
-                    caption = GetCaption(e.Measurement.Bars);
-                    break;
-                case "millibar":
-                    caption = GetCaption(e.Measurement.MilliBars);
-                    break;
-                case "kilopascal":
-                    caption = GetCaption(e.Measurement.KiloPascals);
-                    break;
-                case "Mercury (mm)":
-                    caption = GetCaption(e.Measurement.HgMm);
-                    break;
-                case "Mercury (inches)":
-                    caption = GetCaption(e.Measurement.HgInches);
-                    break;
-                case "psi":
-                    caption = GetCaption(e.Measurement.Psi);
-                    break;
-            }
+            measurement = e.Measurement;
 
             if (_timer == null)
             {
@@ -131,13 +97,13 @@ namespace SensorTag.Pages
         {
             if (visible)
             {
-                sensor.Barometer.BarometerMeasurementValueChanged += OnBarometerMeasurementValueChanged;
-                sensor.Barometer.StartReading();
+                sensor.Humidity.HumidityMeasurementValueChanged += Humidity_HumidityMeasurementValueChanged;
+                sensor.Humidity.StartReading();
             }
             else
             {
-                sensor.Barometer.BarometerMeasurementValueChanged -= OnBarometerMeasurementValueChanged;
-                sensor.Barometer.StopReading();
+                sensor.Humidity.HumidityMeasurementValueChanged -= Humidity_HumidityMeasurementValueChanged;
+                sensor.Humidity.StopReading();
             }
         }
         private void StartTimer()
@@ -151,33 +117,25 @@ namespace SensorTag.Pages
             }
         }
 
-        //bool updatingPeriod;
+        bool animating;
 
         private void OnTimerTick(object sender, object e)
         {
-            //if (period.HasValue && (int)SensitivitySlider.Value != period && !updatingPeriod)
-            //{
-            //    updatingPeriod = true;
-            //    period = (int)SensitivitySlider.Value;
-            //    Task.Run(new Action(UpdatePeriod));
-            //}
-
-            if (ValueText.Text != caption)
+            if (measurement != null)
             {
-                ValueText.Text = caption;
+                HumidityText.Text = ((int)measurement.Humidity).ToString();
+                TemperatureText.Text = ((int)measurement.Temperature).ToString();
+
+                if (!animating)
+                {
+                    animating = true;
+                    HumidityGraph.Start();
+                    TemperatureGraph.Start();
+                }
+                HumidityGraph.SetCurrentValue(measurement.Humidity);
+                TemperatureGraph.SetCurrentValue(measurement.Temperature);
             }
-
         }
-
-        //async void UpdatePeriod()
-        //{
-        //    try
-        //    {
-        //        await sensor.Barometer.SetPeriod(period.Value);
-        //    }
-        //    catch { }
-        //    updatingPeriod = false;
-        //}
 
         private void StopTimer()
         {
@@ -188,11 +146,5 @@ namespace SensorTag.Pages
                 _timer = null;
             }
         }
-
-        private void OnUnitChanged(object sender, SelectionChangedEventArgs e)
-        {
-            selectedUnit = (string)UnitCombo.SelectedItem;
-        }
-
     }
 }

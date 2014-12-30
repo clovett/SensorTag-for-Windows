@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -47,13 +48,23 @@ namespace SensorTag.Pages
                 sensor.Accelerometer.AccelerometerMeasurementValueChanged += OnAccelerometerMeasurementValueChanged;
                 sensor.Accelerometer.StartReading();
                 period = await sensor.Accelerometer.GetPeriod();
-                SensitivitySlider.Value = period.Value;
+                SetSensitivity(period.Value);
                 ShowMessage("");
             }
             catch (Exception ex)
             {
                 ShowMessage(ex.Message);
             }
+        }
+
+        double GetSensitivity()
+        {
+            return SensitivitySlider.Value;
+        }
+
+        void SetSensitivity(double value)
+        {
+            SensitivitySlider.Value = value;
         }
 
         private void ShowMessage(string msg)
@@ -130,10 +141,12 @@ namespace SensorTag.Pages
                 YAxis.SetCurrentValue(measurement.Y);
                 ZAxis.SetCurrentValue(measurement.Z);
 
-                if (period.HasValue && (int)SensitivitySlider.Value != period && !updatingPeriod)
+                int s = (int)Math.Max(1, GetSensitivity());
+
+                if (period.HasValue && s != period && !updatingPeriod)
                 {
                     updatingPeriod = true;
-                    period = (int)SensitivitySlider.Value;
+                    period = s;
                     Task.Run(new Action(UpdatePeriod));
                 }
 
@@ -147,6 +160,7 @@ namespace SensorTag.Pages
         {
             try
             {
+                Debug.WriteLine("Period=" + period.Value);
                 await sensor.Accelerometer.SetPeriod(period.Value);
             }
             catch { }

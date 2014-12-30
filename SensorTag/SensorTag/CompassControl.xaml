@@ -1,0 +1,27 @@
+﻿<UserControl
+    x:Class="SensorTag.Controls.CompassControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:SensorTag.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    d:DesignHeight="200"
+    d:DesignWidth="200">
+    
+    <Grid>
+        <Ellipse Stroke="{ThemeResource ApplicationForegroundThemeBrush}" StrokeThickness="3"/>        
+        <Grid>
+            <Grid.RenderTransform>
+                <TransformGroup>
+                    <RotateTransform x:Name="RotateTransform" Angle="30" />
+                    <TranslateTransform x:Name="TranslateTransform" X="100" Y="100"/>
+                </TransformGroup>
+            </Grid.RenderTransform>
+            <Path x:Name="TopHand" Fill="{ThemeResource PhoneAccentBrush}"
+                  Data="M 0,0 L 10,0,0,100,-10,0z"/>
+            <Path x:Name="BottomHand" Fill="{ThemeResource ApplicationForegroundThemeBrush}"
+                  Data="M 0,0 L 10,0,0,-100,-10,0z"/>
+        </Grid>
+    </Grid>
+</UserControl>

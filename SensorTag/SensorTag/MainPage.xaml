@@ -9,7 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Margin="0, 40, 0, 0">
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -21,7 +21,6 @@
             <TextBlock x:Name="DeviceName" Text="SensorTag" FontSize="36" Margin="10" />
         </Grid>
 
-
         <ListView x:Name="SensorList"  Grid.Row="1">
             <ListView.ItemsPanel>
                 <ItemsPanelTemplate>
@@ -30,11 +29,11 @@
             </ListView.ItemsPanel>
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <c:TileControl Click="OnTileClick" Margin="10"/>
+                    <c:TileControl Click="OnTileClick" Margin="10"
+                                   />
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
-
 
         <TextBlock x:Name="ErrorMessage" Text="" FontSize="24" Margin="10" Grid.Row="2" TextWrapping="Wrap" Foreground="Salmon"/>
 
