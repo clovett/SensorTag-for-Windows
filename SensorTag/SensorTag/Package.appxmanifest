@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/2010/manifest" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest">
-  <Identity Name="A3E4EFB7-5824-4A1E-92C4-0F3FDEAF4635" Publisher="CN=clovett" Version="1.0.0.0" />
-  <mp:PhoneIdentity PhoneProductId="66b33405-2617-4ac4-a62d-a3bb8f4d9fbf" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
+  <Identity Name="43906ChrisLovett.SensorTag" Publisher="CN=BC801FCC-0BF8-49D7-9F51-1B625C3BE476" Version="1.1.0.1" />
+  <mp:PhoneIdentity PhoneProductId="c3d02862-8af1-4227-9dc4-ef457eed8cab" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
-    <DisplayName>Sensor Tag</DisplayName>
-    <PublisherDisplayName>clovett</PublisherDisplayName>
+    <DisplayName>SensorTag</DisplayName>
+    <PublisherDisplayName>Chris Lovett</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
   <Prerequisites>
