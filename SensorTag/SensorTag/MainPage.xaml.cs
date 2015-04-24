@@ -283,13 +283,20 @@ namespace SensorTag
 
         private async Task ConnectSensors()
         {
-            await sensor.Reconnect();
-            
-            RegisterEvents(true);
+            try
+            {
+                await sensor.Reconnect();
 
-            SensorList.ItemsSource = tiles;
+                RegisterEvents(true);
 
-            await sensor.Accelerometer.SetPeriod(1000); // save battery
+                SensorList.ItemsSource = tiles;
+
+                await sensor.Accelerometer.SetPeriod(1000); // save battery
+            } 
+            catch (Exception ex)
+            {
+                DisplayMessage(ex.Message);
+            }
         }
 
         private void StartTimer()

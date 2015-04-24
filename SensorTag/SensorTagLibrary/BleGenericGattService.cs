@@ -44,6 +44,7 @@ namespace Microsoft.MobileLabs.Bluetooth
         Guid _requestedServiceGuid;
         HashSet<Guid> _requestedCharacteristics = new HashSet<Guid>();
         bool _connected;
+        bool _disconnecting;
 
         protected virtual void Dispose(bool disposing)
         {
@@ -53,9 +54,21 @@ namespace Microsoft.MobileLabs.Bluetooth
 
         public bool IsConnected { get { return _connected; } }
 
+        public bool IsDisconnecting
+        {
+            get { return _disconnecting; }
+        }
+
+
         private async void Disconnect()
         {
+            if (_disconnecting)
+            {
+                return;
+            }
+            _disconnecting = true;
             await this.UnregisterAllValueChangeEvents();
+
             if (_service != null)
             {
                 // bugbug: if we call _service.Dispose below then the app will get System.ObjectDisposedException'
@@ -72,7 +85,14 @@ namespace Microsoft.MobileLabs.Bluetooth
                 Debug.WriteLine("_service disconnected: " + this.GetType().Name);
                 _service = null;
             }
-            _connected = false;
+            _disconnecting = false;
+            _connected = false; 
+
+            if (DisconnectFinished != null)
+            {
+                DisconnectFinished(this, EventArgs.Empty);
+            }
+
         }
 
         protected virtual void OnCharacteristicValueChanged(GattCharacteristic sender, GattValueChangedEventArgs args)
@@ -80,6 +100,7 @@ namespace Microsoft.MobileLabs.Bluetooth
             // handled by subclasses
         }
 
+        public event EventHandler DisconnectFinished;
 
         public event EventHandler<ConnectionChangedEventArgs> ConnectionChanged;
 
@@ -147,6 +168,8 @@ namespace Microsoft.MobileLabs.Bluetooth
         /// <returns></returns>
         protected async Task<bool> ConnectAsync(Guid serviceGuid, string deviceContainerId)
         {
+            _disconnecting = false;
+
             this._requestedServiceGuid = serviceGuid;
 
             var devices = await DeviceInformation.FindAllAsync(GattDeviceService.GetDeviceSelectorFromUuid(
@@ -187,7 +210,7 @@ namespace Microsoft.MobileLabs.Bluetooth
             if (_service == null)
             {
                 _connected = false;
-                throw new Exception("Service not available, is another app still running that is using the pinweight service?");
+                throw new Exception("Service not available, is another app still running that is using the service?");
             }
 
             _connected = true;
@@ -229,6 +252,8 @@ namespace Microsoft.MobileLabs.Bluetooth
                 GattCharacteristic characteristic;
                 if (registerNotifyQueue.TryDequeue(out characteristic))
                 {
+                    characteristic.ProtectionLevel = GattProtectionLevel.Plain;
+
                     var task = characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify).AsTask();
                     task.Wait();
 
