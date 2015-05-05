@@ -275,7 +275,14 @@ namespace SensorTag
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
             active = true;
-            await sensor.Reconnect();
+            try
+            {
+                await sensor.Reconnect();
+            }
+            catch (Exception ex)
+            {
+                DisplayMessage(ex.Message);                
+            }
             if (active)
             {
                 RegisterEvents(true);
@@ -395,12 +402,19 @@ namespace SensorTag
             }
         }
 
-        public void OnVisibilityChanged(bool visible)
+        public async void OnVisibilityChanged(bool visible)
         {
             if (visible)
             {
                 active = true;
-                var nowait = sensor.Reconnect();
+                try
+                {
+                    await sensor.Reconnect();
+                }
+                catch (Exception ex)
+                {
+                    DisplayMessage(ex.Message);
+                }
             }
             else
             {

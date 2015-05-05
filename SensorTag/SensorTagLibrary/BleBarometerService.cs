@@ -22,7 +22,7 @@ namespace SensorTag
     {
         int[] c; // calibration data.
 
-        public BleBarometerService() 
+        public BleBarometerService()
         {
         }
 
@@ -31,7 +31,7 @@ namespace SensorTag
         static Guid BarometerCharacteristicConfigUuid = Guid.Parse("f000aa42-0451-4000-b000-000000000000");
         static Guid BarometerCharacteristicCalibrationUuid = Guid.Parse("f000aa43-0451-4000-b000-000000000000");
         static Guid BarometerCharacteristicPeriodUuid = Guid.Parse("f000aa44-0451-4000-b000-000000000000");
-        
+
         Delegate _barometerValueChanged;
 
         public event EventHandler<BarometerMeasurementEventArgs> BarometerMeasurementValueChanged
@@ -97,7 +97,6 @@ namespace SensorTag
             await WriteCharacteristicByte(BarometerCharacteristicConfigUuid, 2);
 
             await ReadCalibration();
-
         }
 
         public event EventHandler Calibrated;
@@ -251,7 +250,7 @@ namespace SensorTag
         /// <summary>
         /// Barometric pressure (hecto-pascal)
         /// </summary>
-        public double HectoPascals { get; set;}
+        public double HectoPascals { get; set; }
 
         public double Bars { get { return HectoPascals / 1000; } }
 
