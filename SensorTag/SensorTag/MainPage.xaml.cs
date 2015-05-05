@@ -274,22 +274,28 @@ namespace SensorTag
         /// property is typically used to configure the page.</param>
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
+            if (!active)
+            {
             active = true;
+                await ConnectSensors();
+            }
+        }
+
+        private async Task ConnectSensors()
+        {
             try
             {
-                await sensor.Reconnect();
-            }
-            catch (Exception ex)
-            {
-                DisplayMessage(ex.Message);                
-            }
-            if (active)
-            {
+            await sensor.Reconnect();
+
                 RegisterEvents(true);
 
                 SensorList.ItemsSource = tiles;
 
                 await sensor.Accelerometer.SetPeriod(1000); // save battery
+            }
+            catch (Exception ex)
+            {
+                DisplayMessage(ex.Message);
             }
         }
 
@@ -406,14 +412,10 @@ namespace SensorTag
         {
             if (visible)
             {
+                if (!active)
+                {
                 active = true;
-                try
-                {
-                    await sensor.Reconnect();
-                }
-                catch (Exception ex)
-                {
-                    DisplayMessage(ex.Message);
+                    await ConnectSensors();
                 }
             }
             else

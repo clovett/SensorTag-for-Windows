@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -41,9 +42,9 @@ namespace Microsoft.MobileLabs.Bluetooth
         PnpObjectWatcher _connectionWatcher;
         List<GattCharacteristic> _characteristics = new List<GattCharacteristic>();
         Guid _requestedServiceGuid;
-        List<Guid> _requestedCharacteristics = new List<Guid>();
+        HashSet<Guid> _requestedCharacteristics = new HashSet<Guid>();
         bool _connected;
-        CancellationTokenSource reconnectTaskCancel;
+        bool _disconnecting;
 
         protected virtual void Dispose(bool disposing)
         {
@@ -53,13 +54,21 @@ namespace Microsoft.MobileLabs.Bluetooth
 
         public bool IsConnected { get { return _connected; } }
 
+        public bool IsDisconnecting
+        {
+            get { return _disconnecting; }
+        }
+
+
         private async void Disconnect()
         {
-            foreach (var characteristic in _characteristics)
+            if (_disconnecting)
             {
-                await UnregisterCharacteristic(characteristic);
+                return;
             }
-            _characteristics.Clear();
+            _disconnecting = true;
+            await this.UnregisterAllValueChangeEvents();
+
             if (_service != null)
             {
                 // bugbug: if we call _service.Dispose below then the app will get System.ObjectDisposedException'
@@ -76,18 +85,22 @@ namespace Microsoft.MobileLabs.Bluetooth
                 Debug.WriteLine("_service disconnected: " + this.GetType().Name);
                 _service = null;
             }
-            if (reconnectTaskCancel != null)
+            _disconnecting = false;
+            _connected = false; 
+
+            if (DisconnectFinished != null)
             {
-                reconnectTaskCancel.Cancel();
-                reconnectTaskCancel = null;
+                DisconnectFinished(this, EventArgs.Empty);
             }
-            _connected = false;
+
         }
 
         protected virtual void OnCharacteristicValueChanged(GattCharacteristic sender, GattValueChangedEventArgs args)
         {
+            // handled by subclasses
         }
 
+        public event EventHandler DisconnectFinished;
 
         public event EventHandler<ConnectionChangedEventArgs> ConnectionChanged;
 
@@ -126,25 +139,26 @@ namespace Microsoft.MobileLabs.Bluetooth
 
         public string DeviceContainerId { get; set; }
 
-        private static readonly string CONTAINER_ID_PROPERTY_NAME = "System.Devices.ContainerId";
+        internal static readonly string CONTAINER_ID_PROPERTY_NAME = "System.Devices.ContainerId";
         private static readonly string CONNECTED_FLAG_PROPERTY_NAME = "System.Devices.Connected";
 
-        private Dictionary<String, String> deviceId2Name = new Dictionary<string, string>();
-        protected async Task<Dictionary<String, String>> FindMatchingDevices(Guid serviceGuid)
+        public async Task<IEnumerable<BleGattDeviceInfo>> FindMatchingDevices(Guid serviceGuid)
         {
             var devices = await DeviceInformation.FindAllAsync(GattDeviceService.GetDeviceSelectorFromUuid(
                                                                  serviceGuid), new string[] {
                                                                          CONTAINER_ID_PROPERTY_NAME
                                                                      });
-            this.deviceId2Name.Clear();
+
+            List<BleGattDeviceInfo> result = new List<BleGattDeviceInfo>();
+
             foreach (DeviceInformation device in devices)
             {
-                string id = device.Properties[CONTAINER_ID_PROPERTY_NAME].ToString();
-                this.deviceId2Name[id] = device.Name;
+                result.Add(new BleGattDeviceInfo(device));
             }
 
-            return this.deviceId2Name;
+            return result;
         }
+
         /// <summary>
         /// Initialize the new service
         /// </summary>
@@ -154,6 +168,8 @@ namespace Microsoft.MobileLabs.Bluetooth
         /// <returns></returns>
         protected async Task<bool> ConnectAsync(Guid serviceGuid, string deviceContainerId)
         {
+            _disconnecting = false;
+
             this._requestedServiceGuid = serviceGuid;
 
             var devices = await DeviceInformation.FindAllAsync(GattDeviceService.GetDeviceSelectorFromUuid(
@@ -194,7 +210,7 @@ namespace Microsoft.MobileLabs.Bluetooth
             if (_service == null)
             {
                 _connected = false;
-                throw new Exception("Service not available, is another app still running that is using the pinweight service?");
+                throw new Exception("Service not available, is another app still running that is using the service?");
             }
 
             _connected = true;
@@ -204,6 +220,9 @@ namespace Microsoft.MobileLabs.Bluetooth
 
             OnConnectionChanged(_connected);
 
+            // in case the event handlers were added before Connect().
+            ReregisterAllValueChangeEvents();
+
             if (_service != null)
             {
                 Debug.WriteLine("Service connected: " + this.GetType().Name);
@@ -211,11 +230,71 @@ namespace Microsoft.MobileLabs.Bluetooth
             return true;
         }
 
-        protected async void RegisterForValueChangeEvents(Guid guid)
+        ConcurrentQueue<GattCharacteristic> registerNotifyQueue = new ConcurrentQueue<GattCharacteristic>();
+        bool enableNotifyThreadRunning;
+
+        private void QueueAsyncEnableNotification(GattCharacteristic characteristic)
         {
-            if (_service == null)
+            registerNotifyQueue.Enqueue(characteristic);
+            if (!enableNotifyThreadRunning && _service != null)
             {
-                Debug.WriteLine("RegisterForValueChangeEvents called when service was disconnected");
+                enableNotifyThreadRunning = true;
+                Task.Run(new Action(ProcessEnableNotificationQueue));
+            }
+
+        }
+
+        private void ProcessEnableNotificationQueue()
+        {
+            try
+            {
+                int retry = 5;
+                GattCharacteristic characteristic;
+                if (registerNotifyQueue.TryDequeue(out characteristic))
+                {
+                    characteristic.ProtectionLevel = GattProtectionLevel.Plain;
+
+                    var task = characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify).AsTask();
+                    task.Wait();
+
+                    GattCommunicationStatus status = task.Result;
+
+                    if (status != GattCommunicationStatus.Success)
+                    {
+                        Debug.WriteLine("GattClientCharacteristicConfigurationDescriptorValue.Notify: " + status);
+                        if (status == GattCommunicationStatus.Unreachable)
+                        {
+                            OnError("Registering to get notification from the device failed saying device is unreachable.  Perhaps the device is connected to another computer?");
+                        }
+                    }
+                    else
+                    {
+                        // this characteristic should now be notifying.
+                        lock (_characteristics)
+                        {
+                            _characteristics.Add(characteristic);
+                        }
+                    }
+                }
+                else if (retry-- > 0)
+                {
+                    Task.Delay(100);
+                }
+            }
+            catch
+            {
+            }
+            enableNotifyThreadRunning = false; 
+
+        }
+
+        protected void RegisterForValueChangeEvents(Guid guid)
+        {
+            _requestedCharacteristics.Add(guid);
+
+            if (_service == null || !this._connected)
+            {
+                // wait till we are connected...
                 return;
             }
             try
@@ -227,8 +306,7 @@ namespace Microsoft.MobileLabs.Bluetooth
                     OnError("Characteristic " + guid + " not available");
                     return;
                 }
-
-
+                
                 GattCharacteristicProperties properties = characteristic.CharacteristicProperties;
 
 
@@ -275,23 +353,16 @@ namespace Microsoft.MobileLabs.Bluetooth
                 }
 
                 if ((properties & GattCharacteristicProperties.Notify) != 0)
-                {
+                {                    
                     characteristic.ValueChanged += OnCharacteristicValueChanged;
 
-                    GattCommunicationStatus status = await characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
-                            GattClientCharacteristicConfigurationDescriptorValue.Notify);
+                    QueueAsyncEnableNotification(characteristic);
 
-                    if (status != GattCommunicationStatus.Success)
-                    {
-                        Debug.WriteLine("GattClientCharacteristicConfigurationDescriptorValue.Notify: " + status);
-                        if (status == GattCommunicationStatus.Unreachable)
-                        {
-                            OnError("Registering to get notification from the device failed saying device is unreachable.  Perhaps the device is connected to another computer?");
-                        }
-                    }
                 }
-                this._requestedCharacteristics.Add(guid);
-                _characteristics.Add(characteristic);
+                else
+                {
+                    OnError("Registering for notification on characteristic that doesn't support notification: " + guid);
+                }
             }
             catch (Exception ex)
             {
@@ -299,13 +370,29 @@ namespace Microsoft.MobileLabs.Bluetooth
             }
         }
 
+        GattCharacteristic[] GetSafeCharacteristics()
+        {
+            GattCharacteristic[] temp;
+            if (_characteristics == null)
+            {
+                return new GattCharacteristic[0];
+            }
+            lock (_characteristics)
+            {
+                temp = _characteristics.ToArray();
+            }
+            return temp;
+        }
+
+
         public async void UnregisterForValueChangeEvents(Guid guid)
         {
-            foreach (var characteristic in _characteristics.ToArray())
+            foreach (var characteristic in GetSafeCharacteristics())
             {
                 if (characteristic.Uuid == guid)
                 {
                     await UnregisterCharacteristic(characteristic);
+                    break;
                 }
             }
             this._requestedCharacteristics.Remove(guid);
@@ -335,7 +422,7 @@ namespace Microsoft.MobileLabs.Bluetooth
             {
                 return null;
             }
-            foreach (var ch in _characteristics)
+            foreach (var ch in GetSafeCharacteristics())
             {
                 if (ch.Uuid == guid)
                 {
@@ -377,37 +464,34 @@ namespace Microsoft.MobileLabs.Bluetooth
             {
                 if (!_connected && isConnected)
                 {
-                    if (reconnectTaskCancel != null && !reconnectTaskCancel.IsCancellationRequested)
-                    {
-                        reconnectTaskCancel.Cancel();
-                    }
-                    reconnectTaskCancel = new CancellationTokenSource();
-                    var nowait = Task.Run(new Action(() => { ReregisterAllValueChangeEvents(); }), reconnectTaskCancel.Token);
+                    var nowait = Task.Run(new Action(() => { ReregisterAllValueChangeEvents(); }));
                 }
                 OnConnectionChanged(isConnected);
             }
         }
 
-        private async void ReregisterAllValueChangeEvents()
+        private async Task UnregisterAllValueChangeEvents()
         {
-            var token = reconnectTaskCancel.Token;
-            List<Guid> temp = this._requestedCharacteristics;
-            _requestedCharacteristics = new List<Guid>();
-            _characteristics = new List<GattCharacteristic>();
-            while (!token.IsCancellationRequested && temp.Count > 0)
+            foreach (var characteristic in GetSafeCharacteristics())
             {
-                foreach (Guid guid in temp.ToArray())
-                {
-                    RegisterForValueChangeEvents(guid);
-                    temp.Remove(guid); // this one is good.
+                await UnregisterCharacteristic(characteristic);
+            }
+            lock (_characteristics)
+            {
+                _characteristics.Clear();
+            }
+        }
 
-                    // sometimes we get a weird exception saying some semaphore has timed out inside
-                    // the BLE stack with HRESULT 0x80070079, so if that happens we wait a bit and try again      
-                    if (!token.IsCancellationRequested)
-                    {
-                        await Task.Delay(500, token);
-                    }
-                }
+        private void ReregisterAllValueChangeEvents()
+        {
+            List<Guid> temp = new List<Guid>(this._requestedCharacteristics);
+            lock (_characteristics)
+            {
+                _characteristics.Clear();
+            }
+            foreach (Guid guid in temp)
+            { 
+                RegisterForValueChangeEvents(guid);
             }
         }
 
@@ -527,6 +611,139 @@ namespace Microsoft.MobileLabs.Bluetooth
             get;
             private set;
         }
+    }
+
+    public class BleGattDeviceInfo
+    {
+        string serviceGuid;
+        string instanceUuid;
+        string vid;
+        string pid;
+        string rev;
+        string macAddress;
+        ulong addr;
+
+        public DeviceInformation DeviceInformation { get; private set; }
+
+        public BleGattDeviceInfo(DeviceInformation info)
+        {
+            this.DeviceInformation = info;
+
+            string id = info.Id;
+
+            // something like this:
+            // \\?\BTHLEDevice#{0000fff0-0000-1000-8000-00805f9b34fb}_Dev_VID&01000d_PID&0000_REV&0110_b4994c5d8fc1#7&2839f98&c&0023#{6e3bb679-4372-40c8-9eaa-4509df260cd8}
+            if (id.StartsWith(@"\\?\BTHLEDevice#"))
+            {
+                int i = id.IndexOf('{');
+                if (i > 0 && i < id.Length - 1)
+                {
+                    i++;
+                    int j = id.IndexOf('}', i);
+                    if (j > i)
+                    {
+                        serviceGuid = id.Substring(i, j - i);
+                        if (j < id.Length - 1)
+                        {
+                            i = id.IndexOf('{', j);
+                            string tail = id.Substring(j + 1);
+                            if (i > 0 && i < id.Length - 1)
+                            {
+                                i++;
+                                j = id.IndexOf('}', i);
+                                if (j > i)
+                                {
+                                    instanceUuid = id.Substring(i, j - i);
+                                }
+                            }
+                            i = tail.IndexOf('#');
+                            if (i > 0)
+                            {
+                                tail = tail.Substring(0, i);
+                            }
+                            string[] parts = tail.Split('_');
+                            foreach (string p in parts)
+                            {
+                                if (p.StartsWith("VID&"))
+                                {
+                                    this.vid = p.Substring(4);
+                                }
+                                else if (p.StartsWith("PID&"))
+                                {
+                                    this.pid = p.Substring(4);
+                                }
+                                else if (p.StartsWith("REV&"))
+                                {
+                                    this.pid = p.Substring(4);
+                                }
+                                else if (p.Length == 12)
+                                {
+                                    this.MacAddress = p;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public string ContainerId
+        {
+            get
+            {
+                object o = DeviceInformation.Properties[BleGenericGattService.CONTAINER_ID_PROPERTY_NAME];
+                if (o != null)
+                {
+                    return o.ToString();
+                }
+                return null;
+            }
+        }
+
+
+        public string ServiceGuid
+        {
+            get { return serviceGuid; }
+        }
+
+        public string InstanceUuid
+        {
+            get { return instanceUuid; }
+        }
+
+        public string Vid
+        {
+            get { return vid; }
+        }
+
+        public string Pid
+        {
+            get { return pid; }
+        }
+
+        public string Revision
+        {
+            get { return rev; }
+            set { rev = value; }
+        }
+
+        public string MacAddress
+        {
+            get { return macAddress; }
+            set { macAddress = value; ParseMacAddress(value); }
+        }
+
+        public ulong Address
+        {
+            get { return addr; }
+            set { addr = value; }
+        }
+
+        private void ParseMacAddress(string value)
+        {
+            ulong.TryParse(value, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.CurrentCulture, out addr);
+        }
+
     }
 
 }
