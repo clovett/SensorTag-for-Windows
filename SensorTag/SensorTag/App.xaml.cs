@@ -25,6 +25,8 @@ namespace SensorTag
     /// </summary>
     sealed partial class App : Application
     {
+        Settings _settings;
+
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -64,9 +66,16 @@ namespace SensorTag
         /// search results, and so forth.
         /// </summary>
         /// <param name="e">Details about the launch request and process.</param>
-        protected override void OnLaunched(LaunchActivatedEventArgs e)
+        protected async override void OnLaunched(LaunchActivatedEventArgs e)
         {
             Frame rootFrame = Window.Current.Content as Frame;
+
+            _settings = await Settings.LoadAsync();
+            if (_settings == null)
+            {
+                _settings = new Settings();
+                await _settings.SaveAsync();
+            }
 
             // Do not repeat app initialization when the Window already has content,
             // just ensure that the window is active

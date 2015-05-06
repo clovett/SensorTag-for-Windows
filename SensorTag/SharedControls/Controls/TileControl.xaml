@@ -21,7 +21,7 @@
                 <Border Background="#80FFFFFF" CornerRadius="2" HorizontalAlignment="Left" VerticalAlignment="Bottom" Padding="3">
                     <TextBlock Text="{Binding SensorValue}" FontSize="12" Foreground="Black"/>
                 </Border>
-                <TextBlock Text="{Binding Caption}" Grid.Row="1" HorizontalAlignment="Center" FontSize="18" Foreground="{StaticResource PhoneAccentBrush}"/>
+                <TextBlock Text="{Binding Caption}" Grid.Row="1" HorizontalAlignment="Center" FontSize="16" Foreground="{StaticResource PhoneAccentBrush}"/>
             </Grid>
         </c:TiltContentControl>
     </Border>

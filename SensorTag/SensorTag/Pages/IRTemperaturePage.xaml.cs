@@ -26,14 +26,18 @@ namespace SensorTag.Pages
         SensorTag sensor;
         DispatcherTimer _timer;
         bool celcius;
+        bool initializing;
 
         public TemperaturePage()
         {
             this.InitializeComponent();
 
             sensor = SensorTag.Instance;
-            CelciusButton.IsChecked = true;
+            initializing = true;
+            CelciusButton.IsChecked = Settings.Instance.Celcius;
+            FahrenheitButton.IsChecked = !Settings.Instance.Celcius;
             celcius = true;
+            initializing = false;
         }
 
         /// <summary>
@@ -120,6 +124,7 @@ namespace SensorTag.Pages
                 _timer.Start();
             }
         }
+
         double Fahrenheit(double celcius)
         {
             return celcius * 1.8 + 32.0;
@@ -165,16 +170,20 @@ namespace SensorTag.Pages
             }
         }
 
-        private void OnCelciusClick(object sender, RoutedEventArgs e)
+        private async void OnCelciusClick(object sender, RoutedEventArgs e)
         {
             celcius = true;
-            FahrenheitButton.IsChecked = false;            
+            FahrenheitButton.IsChecked = false;
+            Settings.Instance.Celcius = true;
+            await Settings.Instance.SaveAsync();            
         }
 
-        private void OnFahrenheitClick(object sender, RoutedEventArgs e)
+        private async void OnFahrenheitClick(object sender, RoutedEventArgs e)
         {
             celcius = false;
             CelciusButton.IsChecked = false;
+            Settings.Instance.Celcius = false;
+            await Settings.Instance.SaveAsync();
         }
     }
 }

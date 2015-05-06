@@ -243,6 +243,18 @@ namespace SensorTag
 
     }
 
+    public enum PressureUnit
+    {
+        Hectopascal,
+        Pascal,
+        Bar,
+        Millibar,
+        Kilopascal,
+        MercuryMm,
+        MercuryIn,
+        Psi
+    }
+
 
     public class BarometerMeasurement
     {
@@ -250,6 +262,31 @@ namespace SensorTag
         /// Barometric pressure (hecto-pascal)
         /// </summary>
         public double HectoPascals { get; set; }
+
+        public double GetUnit(PressureUnit unit)
+        {
+            switch (unit)
+            {
+                case PressureUnit.Hectopascal:
+                    return this.HectoPascals;
+                case PressureUnit.Pascal:
+                    return this.Pascals;
+                case PressureUnit.Bar:
+                    return this.Bars;
+                case PressureUnit.Millibar:
+                    return this.MilliBars;
+                case PressureUnit.Kilopascal:
+                    return this.KiloPascals;
+                case PressureUnit.MercuryMm:
+                    return this.HgMm;
+                case PressureUnit.MercuryIn:
+                    return this.HgInches;
+                case PressureUnit.Psi:
+                    return this.Psi;
+            }
+
+            return this.HectoPascals;
+        }
 
         public double Bars { get { return HectoPascals / 1000; } }
 

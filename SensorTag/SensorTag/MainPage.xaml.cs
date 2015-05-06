@@ -163,6 +163,22 @@ namespace SensorTag
             DisplayMessage(status);
         }
 
+        double Fahrenheit(double celcius)
+        {
+            return celcius * 1.8 + 32.0;
+        }
+
+
+        string FormatTemperature(double t)
+        {
+            if (!Settings.Instance.Celcius)
+            {
+                t = Fahrenheit(t);
+            }
+            return t.ToString("N2");
+        }
+
+
         void OnIRTemperatureMeasurementValueChanged(object sender, IRTemperatureMeasurementEventArgs e)
         {
             var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
@@ -172,7 +188,8 @@ namespace SensorTag
                 const double fudge = 5;
                 double temp = e.Measurement.ObjectTemperature + fudge;
 
-                string caption = Math.Round(temp, 3) + " C,  " + Math.Round(temp.ToFahrenheit(), 3) + "F";
+                string suffix = Settings.Instance.Celcius ? " °C" : " °F";
+                string caption = FormatTemperature(temp) + suffix;
 
                 GetTile("IR Temperature").SensorValue = caption;
                 connected = true;
@@ -233,12 +250,15 @@ namespace SensorTag
             {
                 var m = e.Measurement;
 
-                string caption = Math.Round(m.Humidity, 3) + " %rH"; // +Math.Round(m.Temperature, 3) + " °C";
+                string caption = Math.Round(m.Humidity, 3) + " %rH";
 
                 GetTile("Humidity").SensorValue = caption;
                 connected = true;
             }));
         }
+
+        static string[] pressureSuffixes = new string[] { "hPa", "Pa", "bar", "mbar", "kPa", "Hg(mm)", "Hg(in)", "psi" };
+
 
         void OnBarometerMeasurementValueChanged(object sender, BarometerMeasurementEventArgs e)
         {
@@ -246,7 +266,9 @@ namespace SensorTag
             {
                 var m = e.Measurement;
 
-                string caption = Math.Round(m.HectoPascals, 3) + " hPa";
+                var unit = Settings.Instance.PressureUnit;
+
+                string caption = Math.Round(m.GetUnit(unit), 3) + " " + pressureSuffixes[(int)unit];
 
                 GetTile("Barometer").SensorValue = caption;
                 connected = true;

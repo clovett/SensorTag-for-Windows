@@ -26,7 +26,7 @@ namespace SensorTag.Pages
         SensorTag sensor;
         //int? period;
         DispatcherTimer _timer;
-        string selectedUnit;
+        PressureUnit selectedUnit;
 
         public PressurePage()
         {
@@ -34,7 +34,18 @@ namespace SensorTag.Pages
 
             string[] units = new string[] { "hectopascal", "pascal", "bar", "millibar", "kilopascal", "Mercury (mm)", "Mercury (inches)", "psi" };
             UnitCombo.ItemsSource = units;
-            UnitCombo.SelectedIndex = 0;
+            
+            selectedUnit = Settings.Instance.PressureUnit;
+            // some sanity checks
+            if (selectedUnit < PressureUnit.Hectopascal)
+            {
+                selectedUnit = PressureUnit.Hectopascal;
+            }
+            if (selectedUnit > PressureUnit.Psi)
+            {
+                selectedUnit = PressureUnit.Psi;
+            }
+            UnitCombo.SelectedIndex = (int)selectedUnit;
 
             sensor = SensorTag.Instance;
         }
@@ -80,33 +91,7 @@ namespace SensorTag.Pages
 
         private void OnBarometerMeasurementValueChanged(object sender, BarometerMeasurementEventArgs e)
         {
-            switch (selectedUnit)
-            {
-                case "hectopascal":
-                    caption = GetCaption(e.Measurement.HectoPascals);
-                    break;
-                case "pascal":
-                    caption = GetCaption(e.Measurement.Pascals);
-                    break;
-                case "bar":
-                    caption = GetCaption(e.Measurement.Bars);
-                    break;
-                case "millibar":
-                    caption = GetCaption(e.Measurement.MilliBars);
-                    break;
-                case "kilopascal":
-                    caption = GetCaption(e.Measurement.KiloPascals);
-                    break;
-                case "Mercury (mm)":
-                    caption = GetCaption(e.Measurement.HgMm);
-                    break;
-                case "Mercury (inches)":
-                    caption = GetCaption(e.Measurement.HgInches);
-                    break;
-                case "psi":
-                    caption = GetCaption(e.Measurement.Psi);
-                    break;
-            }
+            caption = GetCaption(e.Measurement.GetUnit(this.selectedUnit));
 
             if (_timer == null)
             {
@@ -155,29 +140,12 @@ namespace SensorTag.Pages
 
         private void OnTimerTick(object sender, object e)
         {
-            //if (period.HasValue && (int)SensitivitySlider.Value != period && !updatingPeriod)
-            //{
-            //    updatingPeriod = true;
-            //    period = (int)SensitivitySlider.Value;
-            //    Task.Run(new Action(UpdatePeriod));
-            //}
-
             if (ValueText.Text != caption)
             {
                 ValueText.Text = caption;
             }
 
         }
-
-        //async void UpdatePeriod()
-        //{
-        //    try
-        //    {
-        //        await sensor.Barometer.SetPeriod(period.Value);
-        //    }
-        //    catch { }
-        //    updatingPeriod = false;
-        //}
 
         private void StopTimer()
         {
@@ -189,9 +157,13 @@ namespace SensorTag.Pages
             }
         }
 
-        private void OnUnitChanged(object sender, SelectionChangedEventArgs e)
+        private async void OnUnitChanged(object sender, SelectionChangedEventArgs e)
         {
-            selectedUnit = (string)UnitCombo.SelectedItem;
+            selectedUnit = (PressureUnit)UnitCombo.SelectedIndex;
+
+            // remember this setting.
+            Settings.Instance.PressureUnit = selectedUnit;
+            await Settings.Instance.SaveAsync();
         }
 
     }
