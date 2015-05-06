@@ -8,7 +8,7 @@ using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Devices.Enumeration;
 using Windows.Storage.Streams;
 
-namespace Microsoft.MobileLabs.Bluetooth
+namespace SensorTag
 {
     public class BleBatteryLevelService : BleGenericGattService
     {

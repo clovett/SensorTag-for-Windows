@@ -1,5 +1,4 @@
-﻿using Microsoft.MobileLabs.Bluetooth;
-using SensorTag.Controls;
+﻿using SensorTag.Controls;
 using SensorTag.Pages;
 using System;
 using System.Collections.Generic;

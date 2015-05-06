@@ -12,7 +12,7 @@ using Windows.Devices.Enumeration;
 using Windows.Devices.Enumeration.Pnp;
 using Windows.Storage.Streams;
 
-namespace Microsoft.MobileLabs.Bluetooth
+namespace SensorTag
 {
     public enum GattStatus
     {
@@ -45,6 +45,7 @@ namespace Microsoft.MobileLabs.Bluetooth
         HashSet<Guid> _requestedCharacteristics = new HashSet<Guid>();
         bool _connected;
         bool _disconnecting;
+        BleGattDeviceInfo _connectedDevice;
 
         protected virtual void Dispose(bool disposing)
         {
@@ -59,6 +60,14 @@ namespace Microsoft.MobileLabs.Bluetooth
             get { return _disconnecting; }
         }
 
+        /// <summary>
+        /// Get address of connected device or zero if no device is connected.
+        /// </summary>
+        public ulong MacAddress
+        {
+            get { return _connectedDevice != null ? _connectedDevice.Address : 0; }
+        }
+
 
         private async void Disconnect()
         {
@@ -66,6 +75,7 @@ namespace Microsoft.MobileLabs.Bluetooth
             {
                 return;
             }
+            _connectedDevice = null;
             _disconnecting = true;
             await this.UnregisterAllValueChangeEvents();
 
@@ -86,7 +96,7 @@ namespace Microsoft.MobileLabs.Bluetooth
                 _service = null;
             }
             _disconnecting = false;
-            _connected = false; 
+            _connected = false;
 
             if (DisconnectFinished != null)
             {
@@ -164,49 +174,51 @@ namespace Microsoft.MobileLabs.Bluetooth
         /// </summary>
         /// <param name="serviceGuid">One of GattServiceUuids</param>
         /// <param name="deviceContainerId">The device you are interested in or null if you want any device </param>
-        /// <param name="characteristics">One or more GattCharacteristicUuids</param>
+        /// <param name="radioAddress">Optional radio address to match</param>
         /// <returns></returns>
-        protected async Task<bool> ConnectAsync(Guid serviceGuid, string deviceContainerId)
+        protected async Task<bool> ConnectAsync(Guid serviceGuid, string deviceContainerId, long radioAddress = -1)
         {
             _disconnecting = false;
 
             this._requestedServiceGuid = serviceGuid;
 
-            var devices = await DeviceInformation.FindAllAsync(GattDeviceService.GetDeviceSelectorFromUuid(
-                                                                     serviceGuid), new string[] {
-                                                                         CONTAINER_ID_PROPERTY_NAME
-                                                                     });
+            _connectedDevice = null;
 
-            if (devices.Count == 0)
+            var devices = await FindMatchingDevices(serviceGuid);
+
+            if (!devices.Any())
             {
                 _connected = false;
                 OnError("no devices found, try using bluetooth settings to pair your device");
                 return false;
             }
 
-            DeviceInformation deviceInformation = null;
+            BleGattDeviceInfo matchingDevice = null;
 
-            foreach (DeviceInformation device in devices)
+            foreach (var device in devices)
             {
-                string id = device.Properties[CONTAINER_ID_PROPERTY_NAME].ToString();
+                string id = device.ContainerId;
                 if (deviceContainerId == null || string.Compare(id, deviceContainerId, StringComparison.OrdinalIgnoreCase) == 0)
                 {
-                    DeviceContainerId = id;
-                    deviceInformation = device;
-                    break;
+                    if (radioAddress == -1 || device.Address == (ulong)radioAddress)
+                    {
+                        DeviceContainerId = id;
+                        matchingDevice = device;
+                        break;
+                    }
                 }
             }
 
-            if (deviceInformation == null)
+            if (matchingDevice == null)
             {
                 _connected = false;
                 OnError("requested device not found");
                 return false;
             }
 
-            DeviceName = deviceInformation.Name;
+            DeviceName = matchingDevice.DeviceInformation.Name;
 
-            _service = await GattDeviceService.FromIdAsync(deviceInformation.Id);
+            _service = await GattDeviceService.FromIdAsync(matchingDevice.DeviceInformation.Id);
             if (_service == null)
             {
                 _connected = false;
@@ -214,6 +226,7 @@ namespace Microsoft.MobileLabs.Bluetooth
             }
 
             _connected = true;
+            _connectedDevice = matchingDevice;
 
             // don't wait on this, async is fine.
             var nowait = RegisterForConnectionEvents();
@@ -281,10 +294,11 @@ namespace Microsoft.MobileLabs.Bluetooth
                     Task.Delay(100);
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                OnError("Registering to get notification from the device failed.  " + ex.Message);
             }
-            enableNotifyThreadRunning = false; 
+            enableNotifyThreadRunning = false;
 
         }
 
@@ -306,7 +320,7 @@ namespace Microsoft.MobileLabs.Bluetooth
                     OnError("Characteristic " + guid + " not available");
                     return;
                 }
-                
+
                 GattCharacteristicProperties properties = characteristic.CharacteristicProperties;
 
 
@@ -353,7 +367,8 @@ namespace Microsoft.MobileLabs.Bluetooth
                 }
 
                 if ((properties & GattCharacteristicProperties.Notify) != 0)
-                {                    
+                {
+                    characteristic.ValueChanged -= OnCharacteristicValueChanged;
                     characteristic.ValueChanged += OnCharacteristicValueChanged;
 
                     QueueAsyncEnableNotification(characteristic);
@@ -446,6 +461,7 @@ namespace Microsoft.MobileLabs.Bluetooth
             _connectionWatcher = PnpObject.CreateWatcher(PnpObjectType.DeviceContainer,
                new string[] { CONNECTED_FLAG_PROPERTY_NAME }, String.Empty);
 
+            _connectionWatcher.Updated -= DeviceConnection_Updated;
             _connectionWatcher.Updated += DeviceConnection_Updated;
             _connectionWatcher.Start();
 
@@ -490,7 +506,7 @@ namespace Microsoft.MobileLabs.Bluetooth
                 _characteristics.Clear();
             }
             foreach (Guid guid in temp)
-            { 
+            {
                 RegisterForValueChangeEvents(guid);
             }
         }
@@ -505,7 +521,7 @@ namespace Microsoft.MobileLabs.Bluetooth
             }
         }
 
-        public async Task WriteCharacteristicByte(Guid characteristicGuid, byte value)
+        public async Task WriteCharacteristicBytes(Guid characteristicGuid, byte[] value)
         {
             var ch = GetCharacteristic(characteristicGuid);
             if (ch != null)
@@ -515,7 +531,7 @@ namespace Microsoft.MobileLabs.Bluetooth
                 if ((properties & GattCharacteristicProperties.Write) != 0)
                 {
                     DataWriter writer = new DataWriter();
-                    writer.WriteByte(value);
+                    writer.WriteBytes(value);
                     var buffer = writer.DetachBuffer();
                     var status = await ch.WriteValueAsync(buffer, GattWriteOption.WriteWithResponse);
                     if (status != GattCommunicationStatus.Success)
@@ -532,6 +548,11 @@ namespace Microsoft.MobileLabs.Bluetooth
             {
                 throw new Exception(string.Format("Characteristic '{0}' not found", characteristicGuid.ToString()));
             }
+        }
+
+        public async Task WriteCharacteristicByte(Guid characteristicGuid, byte value)
+        {
+            await WriteCharacteristicBytes(characteristicGuid, new byte[] { value });
         }
 
         public async Task<byte> ReadCharacteristicByte(Guid characteristicGuid, BluetoothCacheMode cacheMode)
@@ -596,6 +617,105 @@ namespace Microsoft.MobileLabs.Bluetooth
                 throw new Exception(string.Format("Characteristic '{0}' not found", characteristicGuid.ToString()));
             }
         }
+        protected ushort BigEndianUInt16(byte lo, byte hi)
+        {
+            return (ushort)(((ushort)hi << 8) + (ushort)lo);
+        }
+
+        protected void WriteBigEndianUInt16(ushort value, byte[] buffer, int index)
+        {
+            byte lo = (byte)(value & 0xff);
+            byte hi = (byte)(value >> 8);
+            buffer[index] = lo;
+            buffer[index + 1] = hi;
+        }
+
+        protected Guid ReadBigEndianGuid(byte[] bytes)
+        {
+            byte[] buffer = new byte[16];
+            // copy the first six bytes to the end in reverse order
+            CopyBytes(bytes, buffer, 5, 6, 10, -1);
+
+            // copy the next two bytes also in reverse order
+            CopyBytes(bytes, buffer, 7, 2, 8, -1);
+
+            // the next two bytes in the same order
+            CopyBytes(bytes, buffer, 8, 2, 6, 1);
+
+            // the next two bytes in the same order
+            CopyBytes(bytes, buffer, 10, 2, 4, 1);
+
+            // the last four bytes in the same order
+            CopyBytes(bytes, buffer, 12, 4, 0, 1);
+
+            return new Guid(buffer);
+        }
+        protected byte[] WriteBigEndianGuid(Guid guid)
+        {
+            byte[] bytes = guid.ToByteArray();
+
+            byte[] buffer = new byte[16];
+
+            // copy the last six bytes in reverse order
+            CopyBytes(bytes, buffer, 15, 6, 0, -1);
+
+            // copy the next two bytes also in reverse order
+            CopyBytes(bytes, buffer, 9, 2, 6, -1);
+
+            // the next two bytes in the same order
+            CopyBytes(bytes, buffer, 6, 2, 8, 1);
+
+            // the next two bytes in the same order
+            CopyBytes(bytes, buffer, 4, 2, 10, 1);
+
+            // the last four bytes in the same order
+            CopyBytes(bytes, buffer, 0, 4, 12, 1);
+
+            return buffer;
+        }
+
+        private void CopyBytes(byte[] source, byte[] target, int index, int count, int targetIndex, int targetDirection)
+        {
+            int end = index + (count * targetDirection);
+            for (int i = index; i != end; i += targetDirection)
+            {
+                byte b = source[i];
+                target[targetIndex] = b;
+                targetIndex++;
+            }
+        }
+
+
+        protected short ReadBigEndian16bit(DataReader reader)
+        {
+            byte lo = reader.ReadByte();
+            byte hi = reader.ReadByte();
+            return (short)(((short)hi << 8) + (short)lo);
+        }
+
+        protected uint ReadBigEndianUint32(DataReader reader)
+        {
+            byte a = reader.ReadByte();
+            byte b = reader.ReadByte();
+            byte c = reader.ReadByte();
+            byte d = reader.ReadByte();
+
+            return (uint)((d << 24) + (c << 16) + (b << 8) + a);
+        }
+
+        protected void WriteBigEndian32bit(DataWriter writer, uint value)
+        {
+            byte a = (byte)((value & 0xff000000) >> 24);
+            byte b = (byte)((value & 0x00ff0000) >> 16);
+            byte c = (byte)((value & 0x0000ff00) >> 8);
+            byte d = (byte)value;
+            writer.WriteByte(d);
+            writer.WriteByte(c);
+            writer.WriteByte(b);
+            writer.WriteByte(a);
+        }
+
+
     }
 
 
