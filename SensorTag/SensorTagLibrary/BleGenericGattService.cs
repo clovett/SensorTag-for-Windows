@@ -96,7 +96,7 @@ namespace SensorTag
                 _service = null;
             }
             _disconnecting = false;
-            _connected = false;
+            _connected = false; 
 
             if (DisconnectFinished != null)
             {
@@ -202,11 +202,11 @@ namespace SensorTag
                 {
                     if (radioAddress == -1 || device.Address == (ulong)radioAddress)
                     {
-                        DeviceContainerId = id;
+                    DeviceContainerId = id;
                         matchingDevice = device;
-                        break;
-                    }
+                    break;
                 }
+            }
             }
 
             if (matchingDevice == null)
@@ -298,7 +298,7 @@ namespace SensorTag
             {
                 OnError("Registering to get notification from the device failed.  " + ex.Message);
             }
-            enableNotifyThreadRunning = false;
+            enableNotifyThreadRunning = false; 
 
         }
 
@@ -320,7 +320,7 @@ namespace SensorTag
                     OnError("Characteristic " + guid + " not available");
                     return;
                 }
-
+                
                 GattCharacteristicProperties properties = characteristic.CharacteristicProperties;
 
 
@@ -367,7 +367,7 @@ namespace SensorTag
                 }
 
                 if ((properties & GattCharacteristicProperties.Notify) != 0)
-                {
+                {                    
                     characteristic.ValueChanged -= OnCharacteristicValueChanged;
                     characteristic.ValueChanged += OnCharacteristicValueChanged;
 
@@ -506,7 +506,7 @@ namespace SensorTag
                 _characteristics.Clear();
             }
             foreach (Guid guid in temp)
-            {
+            { 
                 RegisterForValueChangeEvents(guid);
             }
         }

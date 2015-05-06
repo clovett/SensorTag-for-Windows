@@ -96,7 +96,6 @@ namespace SensorTag
             await WriteCharacteristicByte(BarometerCharacteristicConfigUuid, 2);
 
             await ReadCalibration();
-
         }
 
         public event EventHandler Calibrated;
@@ -250,7 +249,7 @@ namespace SensorTag
         /// <summary>
         /// Barometric pressure (hecto-pascal)
         /// </summary>
-        public double HectoPascals { get; set;}
+        public double HectoPascals { get; set; }
 
         public double Bars { get { return HectoPascals / 1000; } }
 

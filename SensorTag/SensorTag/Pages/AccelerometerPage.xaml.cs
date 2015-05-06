@@ -59,12 +59,15 @@ namespace SensorTag.Pages
 
         double GetSensitivity()
         {
-            return SensitivitySlider.Value;
+            // Slider goes from 100 to 2550 for the "period" where 2550 is the slowest and therefore the least sensitive.
+            // Therefore we need to reverse the slider values in order for the slider to control sensitivity.
+            return SensitivitySlider.Minimum + SensitivitySlider.Maximum - SensitivitySlider.Value;
         }
 
         void SetSensitivity(double value)
         {
-            SensitivitySlider.Value = value;
+            // Slider is reversed.  See GetSensitivity.
+            SensitivitySlider.Value = SensitivitySlider.Minimum + SensitivitySlider.Maximum - value;
         }
 
         private void ShowMessage(string msg)

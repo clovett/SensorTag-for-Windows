@@ -199,10 +199,6 @@ namespace SensorTag
                     if (disconnecting) return;
                     OnStatusChanged("connected");
                 }
-                catch (Exception ex)
-                {
-                    OnStatusChanged(ex.Message);
-                }
                 finally
                 {
                     connecting = false;
@@ -321,7 +317,7 @@ namespace SensorTag
                 if (await _barometerService.ConnectAsync())
                 {
                     DeviceName = "" + _barometerService.DeviceName;
-                    OnStatusChanged("calibrating...");
+                    OnStatusChanged("calibrating barometer...");
                     _barometerService.ConnectionChanged += OnConnectionChanged;
                     await _barometerService.StartCalibration();
                     OnStatusChanged("calibrated");

@@ -46,8 +46,10 @@ namespace SensorTag.Pages
                 // gives us rotational movement every second
                 sensor.Gyroscope.GyroscopeMeasurementValueChanged += Gyroscope_GyroscopeMeasurementValueChanged;
                 sensor.Gyroscope.StartReading(GyroscopeAxes.XYZ);
+
                 // use the magnetometer for absolute position
                 sensor.Magnetometer.MagnetometerMeasurementValueChanged += Magnetometer_MagnetometerMeasurementValueChanged;
+                sensor.Magnetometer.SetPeriod(100); // fastest reading
                 sensor.Magnetometer.StartReading();
                 ShowMessage("");
             }
@@ -92,6 +94,8 @@ namespace SensorTag.Pages
 
         void Gyroscope_GyroscopeMeasurementValueChanged(object sender, GyroscopeMeasurementEventArgs e)
         {
+            //Debug.WriteLine("{0},{1},{2}", e.Measurement.X, e.Measurement.Y, e.Measurement.Z);
+
             var m = e.Measurement;   
             // magnetometer has quite a bit of noise, if the value is less than 5 then chances are the
             // device is not moving.
@@ -194,12 +198,12 @@ namespace SensorTag.Pages
             if (visible)
             {
                 sensor.Gyroscope.GyroscopeMeasurementValueChanged += Gyroscope_GyroscopeMeasurementValueChanged;
-                sensor.Accelerometer.StartReading();
+                sensor.Gyroscope.StartReading(GyroscopeAxes.XYZ);
             }
             else
             {
                 sensor.Gyroscope.GyroscopeMeasurementValueChanged -= Gyroscope_GyroscopeMeasurementValueChanged;
-                sensor.Accelerometer.StopReading();
+                sensor.Gyroscope.StopReading();
             }
         }
     }
