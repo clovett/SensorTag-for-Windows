@@ -202,11 +202,11 @@ namespace SensorTag
                 {
                     if (radioAddress == -1 || device.Address == (ulong)radioAddress)
                     {
-                    DeviceContainerId = id;
+                        DeviceContainerId = id;
                         matchingDevice = device;
-                    break;
+                        break;
+                    }
                 }
-            }
             }
 
             if (matchingDevice == null)
@@ -263,35 +263,40 @@ namespace SensorTag
             {
                 int retry = 5;
                 GattCharacteristic characteristic;
-                if (registerNotifyQueue.TryDequeue(out characteristic))
+                while (retry > 0)
                 {
-                    characteristic.ProtectionLevel = GattProtectionLevel.Plain;
-
-                    var task = characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify).AsTask();
-                    task.Wait();
-
-                    GattCommunicationStatus status = task.Result;
-
-                    if (status != GattCommunicationStatus.Success)
+                    if (registerNotifyQueue.TryDequeue(out characteristic))
                     {
-                        Debug.WriteLine("GattClientCharacteristicConfigurationDescriptorValue.Notify: " + status);
-                        if (status == GattCommunicationStatus.Unreachable)
+                        //characteristic.ProtectionLevel = GattProtectionLevel.Plain;
+
+                        var task = characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify).AsTask();
+                        task.Wait();
+
+                        GattCommunicationStatus status = task.Result;
+                        Debug.WriteLine("GattClientCharacteristicConfigurationDescriptorValue.Notify: " + status + " " + characteristic.Uuid.ToString("b"));
+
+                        if (status != GattCommunicationStatus.Success)
                         {
-                            OnError("Registering to get notification from the device failed saying device is unreachable.  Perhaps the device is connected to another computer?");
+                            if (status == GattCommunicationStatus.Unreachable)
+                            {
+                                OnError("Registering to get notification from the device failed saying device is unreachable.  Perhaps the device is connected to another computer?");
+                            }
+                        }
+                        else
+                        {
+                            characteristic.ValueChanged += OnCharacteristicValueChanged;
+
+                            // this characteristic should now be notifying.
+                            lock (_characteristics)
+                            {
+                                _characteristics.Add(characteristic);
+                            }
                         }
                     }
-                    else
+                    else if (retry-- > 0)
                     {
-                        // this characteristic should now be notifying.
-                        lock (_characteristics)
-                        {
-                            _characteristics.Add(characteristic);
-                        }
+                        Task.Delay(100);
                     }
-                }
-                else if (retry-- > 0)
-                {
-                    Task.Delay(100);
                 }
             }
             catch (Exception ex)
@@ -367,9 +372,10 @@ namespace SensorTag
                 }
 
                 if ((properties & GattCharacteristicProperties.Notify) != 0)
-                {                    
-                    characteristic.ValueChanged -= OnCharacteristicValueChanged;
-                    characteristic.ValueChanged += OnCharacteristicValueChanged;
+                {
+                    try {
+                        characteristic.ValueChanged -= OnCharacteristicValueChanged;
+                    } catch { }
 
                     QueueAsyncEnableNotification(characteristic);
 
@@ -539,9 +545,20 @@ namespace SensorTag
                         throw new Exception("Write failed: " + status.ToString());
                     }
                 }
+                else if((properties & GattCharacteristicProperties.WriteWithoutResponse) != 0)
+                {
+                    DataWriter writer = new DataWriter();
+                    writer.WriteBytes(value);
+                    var buffer = writer.DetachBuffer();
+                    var status = await ch.WriteValueAsync(buffer, GattWriteOption.WriteWithoutResponse);
+                    if (status != GattCommunicationStatus.Success)
+                    {
+                        throw new Exception("Write failed: " + status.ToString());
+                    }
+                }
                 else
                 {
-                    throw new Exception(string.Format("Characteristic '{0}' does not support GattCharacteristicProperties.Write"));
+                    throw new Exception(string.Format("Characteristic '{0}' does not support GattCharacteristicProperties.Write or WriteWithoutResponse", characteristicGuid));
                 }
             }
             else
@@ -691,6 +708,14 @@ namespace SensorTag
             byte lo = reader.ReadByte();
             byte hi = reader.ReadByte();
             return (short)(((short)hi << 8) + (short)lo);
+        }
+
+        protected void WriteBigEndian16bit(DataWriter writer, ushort value)
+        {
+            byte a = (byte)((value & 0xff00) >> 8);
+            byte b = (byte)value;
+            writer.WriteByte(b);
+            writer.WriteByte(a);
         }
 
         protected uint ReadBigEndianUint32(DataReader reader)

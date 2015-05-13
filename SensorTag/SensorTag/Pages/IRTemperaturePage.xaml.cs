@@ -26,18 +26,15 @@ namespace SensorTag.Pages
         SensorTag sensor;
         DispatcherTimer _timer;
         bool celcius;
-        bool initializing;
 
         public TemperaturePage()
         {
             this.InitializeComponent();
 
             sensor = SensorTag.Instance;
-            initializing = true;
             CelciusButton.IsChecked = Settings.Instance.Celcius;
             FahrenheitButton.IsChecked = !Settings.Instance.Celcius;
             celcius = true;
-            initializing = false;
         }
 
         /// <summary>
