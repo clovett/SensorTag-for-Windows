@@ -90,13 +90,13 @@ namespace SensorTag
         /// The gyro produces new values about once per second and that period cannot be changed.
         /// </summary>
         /// <param name="enableAxes"></param>
-        public async void StartReading(GyroscopeAxes enableAxes)
+        public async Task StartReading(GyroscopeAxes enableAxes)
         {
             byte value = (byte)enableAxes;
             await WriteCharacteristicByte(GyroscopeCharacteristicConfigUuid, value);
         }
 
-        public async void StopReading()
+        public async Task StopReading()
         {
             await WriteCharacteristicByte(GyroscopeCharacteristicConfigUuid, 0);
         }

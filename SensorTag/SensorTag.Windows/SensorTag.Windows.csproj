@@ -107,11 +107,38 @@
       <Project>{702df202-1cfe-456d-9df9-5e4e4daa02a4}</Project>
       <Name>SensorTagLibrary</Name>
     </ProjectReference>
+    <ProjectReference Include="..\SharedControls\SharedControls.csproj">
+      <Project>{f22119a4-141d-426e-8653-e41599e03099}</Project>
+      <Name>SharedControls</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\SensorTag\Pages\AccelerometerPage.xaml.cs">
+      <Link>Pages\AccelerometerPage.xaml.cs</Link>
+    </Compile>
+    <Compile Include="..\SensorTag\Pages\ButtonPage.xaml.cs">
+      <Link>Pages\ButtonPage.xaml.cs</Link>
+    </Compile>
+    <Compile Include="..\SensorTag\Pages\GyroPage.xaml.cs">
+      <Link>Pages\GyroPage.xaml.cs</Link>
+    </Compile>
+    <Compile Include="..\SensorTag\Pages\HumidityPage.xaml.cs">
+      <Link>Pages\HumidityPage.xaml.cs</Link>
+    </Compile>
+    <Compile Include="..\SensorTag\Pages\IRTemperaturePage.xaml.cs">
+      <Link>Pages\IRTemperaturePage.xaml.cs</Link>
+    </Compile>
+    <Compile Include="..\SensorTag\Pages\MagnetometerPage.xaml.cs">
+      <Link>Pages\MagnetometerPage.xaml.cs</Link>
+    </Compile>
+    <Compile Include="..\SensorTag\Pages\PressurePage.xaml.cs">
+      <Link>Pages\PressurePage.xaml.cs</Link>
+    </Compile>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Common\IsolatedStorage.cs" />
+    <Compile Include="Common\Settings.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -141,6 +168,45 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="..\SensorTag\Pages\AccelerometerPage.xaml">
+      <Link>Pages\AccelerometerPage.xaml</Link>
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="..\SensorTag\Pages\ButtonPage.xaml">
+      <Link>Pages\ButtonPage.xaml</Link>
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="..\SensorTag\Pages\GyroPage.xaml">
+      <Link>Pages\GyroPage.xaml</Link>
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="..\SensorTag\Pages\HumidityPage.xaml">
+      <Link>Pages\HumidityPage.xaml</Link>
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="..\SensorTag\Pages\IRTemperaturePage.xaml">
+      <Link>Pages\IRTemperaturePage.xaml</Link>
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="..\SensorTag\Pages\MagnetometerPage.xaml">
+      <Link>Pages\MagnetometerPage.xaml</Link>
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="..\SensorTag\Pages\PressurePage.xaml">
+      <Link>Pages\PressurePage.xaml</Link>
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Common\StandardStyles.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

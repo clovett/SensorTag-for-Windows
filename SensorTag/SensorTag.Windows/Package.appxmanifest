@@ -37,5 +37,20 @@
   </Applications>
   <Capabilities>
     <Capability Name="internetClient" />
+    <m2:DeviceCapability Name="bluetooth.genericAttributeProfile">
+      <m2:Device Id="any">
+        <m2:Function Type="name:battery" />
+        <m2:Function Type="serviceId:f000aa00-0451-4000-b000-000000000000" />
+        <m2:Function Type="serviceId:f000aa10-0451-4000-b000-000000000000" />
+        <m2:Function Type="serviceId:f000aa20-0451-4000-b000-000000000000" />
+        <m2:Function Type="serviceId:f000aa30-0451-4000-b000-000000000000" />
+        <m2:Function Type="serviceId:f000aa40-0451-4000-b000-000000000000" />
+        <m2:Function Type="serviceId:f000aa50-0451-4000-b000-000000000000" />
+        <m2:Function Type="serviceId:0000ffe0-0000-1000-8000-00805f9b34fb" />
+        <m2:Function Type="serviceId:00001800-0000-1000-8000-00805f9b34fb" />
+        <m2:Function Type="serviceId:00001801-0000-1000-8000-00805f9b34fb" />
+        <m2:Function Type="serviceId:0000180A-0000-1000-8000-00805f9b34fb" />
+      </m2:Device>
+    </m2:DeviceCapability>
   </Capabilities>
 </Package>

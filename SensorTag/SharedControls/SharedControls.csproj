@@ -35,6 +35,10 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .NET Framework is automatically included -->
+    <Page Include="Controls\CompassControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Controls\ScrollingGraph.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -49,6 +53,9 @@
     <TargetPlatform Include="Windows, Version=8.1" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controls\CompassControl.xaml.cs">
+      <DependentUpon>CompassControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\ScrollingGraph.xaml.cs">
       <DependentUpon>ScrollingGraph.xaml</DependentUpon>
     </Compile>

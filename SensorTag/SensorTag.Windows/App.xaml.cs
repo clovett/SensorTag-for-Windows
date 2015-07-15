@@ -24,6 +24,8 @@ namespace SensorTag
     /// </summary>
     sealed partial class App : Application
     {
+        Settings _settings;
+
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -39,7 +41,7 @@ namespace SensorTag
         /// will be used such as when the application is launched to open a specific file.
         /// </summary>
         /// <param name="e">Details about the launch request and process.</param>
-        protected override void OnLaunched(LaunchActivatedEventArgs e)
+        protected async override void OnLaunched(LaunchActivatedEventArgs e)
         {
 
 #if DEBUG
@@ -48,6 +50,13 @@ namespace SensorTag
                 this.DebugSettings.EnableFrameRateCounter = true;
             }
 #endif
+
+            _settings = await Settings.LoadAsync();
+            if (_settings == null)
+            {
+                _settings = new Settings();
+                await _settings.SaveAsync();
+            }
 
             Frame rootFrame = Window.Current.Content as Frame;
 
