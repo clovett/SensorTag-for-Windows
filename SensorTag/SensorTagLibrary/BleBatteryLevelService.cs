@@ -19,6 +19,23 @@ namespace SensorTag
 
         public event EventHandler<BatteryLevelMeasurementEventArgs> BatteryLevelMeasurementValueChanged;
 
+        public async Task<IEnumerable<BleGattDeviceInfo>> FindMatchingDevices()
+        {
+            var devices = await DeviceInformation.FindAllAsync(GattDeviceService.GetDeviceSelectorFromUuid(
+                                                                 GattCharacteristicUuids.BatteryLevel), new string[] {
+                                                                         CONTAINER_ID_PROPERTY_NAME
+                                                                     });
+
+            List<BleGattDeviceInfo> result = new List<BleGattDeviceInfo>();
+
+            foreach (DeviceInformation device in devices)
+            {
+                result.Add(new BleGattDeviceInfo(device));
+            }
+
+            return result;
+        }
+
         private void OnBatteryLevelMeasurementValueChanged(BatteryLevelMeasurementEventArgs args)
         {
             if (BatteryLevelMeasurementValueChanged != null)
