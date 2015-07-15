@@ -44,10 +44,10 @@ namespace SensorTag
                 if (_irTemperatureValueChanged != null)
                 {
                     _irTemperatureValueChanged = Delegate.Remove(_irTemperatureValueChanged, value);
-                }
-                if (_irTemperatureValueChanged == null)
-                {
-                    UnregisterForValueChangeEvents(IRTemperatureCharacteristicUuid);
+                    if (_irTemperatureValueChanged == null)
+                    {
+                        UnregisterForValueChangeEvents(IRTemperatureCharacteristicUuid);
+                    }
                 }
             }
         }

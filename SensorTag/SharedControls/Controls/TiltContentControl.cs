@@ -56,9 +56,12 @@ namespace SensorTag.Controls
         /// </summary>
         const double MaxDepression = 25;
 
+        bool _tilting;
+        const double TiltThreshold = 5;
+
         public TiltContentControl()
         {
-            this.ManipulationMode = ManipulationModes.All;
+            //this.ManipulationMode = ManipulationModes.All;
         }
 
 
@@ -70,6 +73,14 @@ namespace SensorTag.Controls
             get
             {
                 return new Duration(TimeSpan.FromMilliseconds(300));
+            }
+        }
+
+        public bool Tilting
+        {
+            get
+            {
+                return _tilting;
             }
         }
 
@@ -121,7 +132,11 @@ namespace SensorTag.Controls
             // Depress and tilt regardless of whether the event was handled.
             if (_planeProjection != null && e.Container != null)
             {
-                DepressAndTilt(e.Position, e.Container);
+                if (_tilting || Math.Abs(e.Cumulative.Translation.X) > TiltThreshold || Math.Abs(e.Cumulative.Translation.Y) > TiltThreshold)
+                {
+                    _tilting = true;
+                    DepressAndTilt(e.Position, e.Container);
+                }
             }
             e.Handled = false;
         }
@@ -141,6 +156,8 @@ namespace SensorTag.Controls
 
         private void StartTilt(Point position, UIElement container)
         {
+            _tilting = false;
+
             if (_presenter != null && _planeProjection == null)
             {
                 _planeProjection = new PlaneProjection();

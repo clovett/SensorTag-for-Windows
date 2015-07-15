@@ -40,13 +40,13 @@ namespace SensorTag.Pages
         /// </summary>
         /// <param name="e">Event data that describes how this page was reached.
         /// This parameter is typically used to configure the page.</param>
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
             ShowMessage("Connecting...");
             try
             {
+                await sensor.Magnetometer.StartReading();
                 sensor.Magnetometer.MagnetometerMeasurementValueChanged += Magnetometer_MagnetometerMeasurementValueChanged;
-                sensor.Magnetometer.StartReading();
                 ShowMessage("");
             }
             catch (Exception ex) {
@@ -63,11 +63,11 @@ namespace SensorTag.Pages
             }));
         }
 
-        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        protected async override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            sensor.Magnetometer.MagnetometerMeasurementValueChanged -= Magnetometer_MagnetometerMeasurementValueChanged;
-            sensor.Barometer.StopReading();
             base.OnNavigatedFrom(e);
+            sensor.Magnetometer.MagnetometerMeasurementValueChanged -= Magnetometer_MagnetometerMeasurementValueChanged;
+            await sensor.Barometer.StopReading();
         }
 
         MagnetometerMeasurement measurement;
@@ -113,17 +113,35 @@ namespace SensorTag.Pages
             if (_timer == null)
             {
                 _timer = new DispatcherTimer();
-                _timer.Interval = TimeSpan.FromMilliseconds(30);
+                _timer.Interval = TimeSpan.FromMilliseconds(100);
                 _timer.Tick += OnTimerTick;
                 _timer.Start();
             }
         }
 
+        bool animating;
         private void OnTimerTick(object sender, object e)
         {
-            AnimationHelper.BeginAnimation(XCompass, new DoubleAnimation() { Duration = new Duration(TimeSpan.FromMilliseconds(100)), To = measurement.X, EnableDependentAnimation = true }, "Angle", null);
-            AnimationHelper.BeginAnimation(YCompass, new DoubleAnimation() { Duration = new Duration(TimeSpan.FromMilliseconds(100)), To = measurement.Y, EnableDependentAnimation = true }, "Angle", null);
-            AnimationHelper.BeginAnimation(ZCompass, new DoubleAnimation() { Duration = new Duration(TimeSpan.FromMilliseconds(100)), To = measurement.Z, EnableDependentAnimation = true }, "Angle", null);
+            double xAngle = measurement.X * (360 / 30);
+            AnimationHelper.BeginAnimation(XCompass, new DoubleAnimation() { Duration = new Duration(TimeSpan.FromMilliseconds(100)), To = xAngle, EnableDependentAnimation = true }, "Angle", null);
+
+            double yAngle = measurement.Y * (360 / 30);
+            AnimationHelper.BeginAnimation(YCompass, new DoubleAnimation() { Duration = new Duration(TimeSpan.FromMilliseconds(100)), To = yAngle, EnableDependentAnimation = true }, "Angle", null);
+            
+            double zAngle = measurement.Z * (360 / 100);
+            AnimationHelper.BeginAnimation(ZCompass, new DoubleAnimation() { Duration = new Duration(TimeSpan.FromMilliseconds(100)), To = zAngle, EnableDependentAnimation = true }, "Angle", null);
+
+            if (!animating)
+            {
+                animating = true;
+                XAxis.Start();
+                YAxis.Start();
+                ZAxis.Start();
+            }
+            XAxis.SetCurrentValue(measurement.X);
+            YAxis.SetCurrentValue(measurement.Y);
+            ZAxis.SetCurrentValue(measurement.Z);
+
         }
 
         private void StopTimer()

@@ -47,10 +47,10 @@ namespace SensorTag
                 if (_magnetometerValueChanged != null)
                 {
                     _magnetometerValueChanged = Delegate.Remove(_magnetometerValueChanged, value);
-                }
-                if (_magnetometerValueChanged == null)
-                {
-                    UnregisterForValueChangeEvents(MagnetometerCharacteristicUuid);
+                    if (_magnetometerValueChanged == null)
+                    {
+                        UnregisterForValueChangeEvents(MagnetometerCharacteristicUuid);
+                    }
                 }
             }
         }

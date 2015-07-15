@@ -49,10 +49,10 @@ namespace SensorTag
                 if (_humidityValueChanged != null)
                 {
                     _humidityValueChanged = Delegate.Remove(_humidityValueChanged, value);
-                }
-                if (_humidityValueChanged == null)
-                {
-                    UnregisterForValueChangeEvents(HumidityCharacteristicUuid);
+                    if (_humidityValueChanged == null)
+                    {
+                        UnregisterForValueChangeEvents(HumidityCharacteristicUuid);
+                    }
                 }
             }
         }

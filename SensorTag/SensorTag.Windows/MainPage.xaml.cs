@@ -55,75 +55,56 @@ namespace SensorTag
             sensor.PropertyChanged += OnSensorPropertyChanged;
             sensor.ConnectionChanged += OnConnectionChanged;
 
-            SensorList.AddHandler(PointerMovedEvent, new PointerEventHandler(Bubble_PointerMoved), false);
+            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         }
 
-        Point? previous;
-        ScrollViewer scroller;
-
-        private void Bubble_PointerMoved(object sender, PointerRoutedEventArgs e)
+        async void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
         {
-            // Could walk up the tree to find the next SV or just have a reference like here:
-            if (scroller == null)
+            if (args.VirtualKey == Windows.System.VirtualKey.F5 && !connected && !connecting)
             {
-                scroller = SensorList.FindDescendant<ScrollViewer>();
-            }
-            if (scroller != null)
-            {
-                Point pos = e.GetCurrentPoint(this).Position;
-                if (previous != null)
-                {
-                    Point past = previous.Value;
-                    double dx = past.X - pos.X;
-                    double dy = past.Y - pos.Y;
-                    Debug.WriteLine(dy);
-                    scroller.ChangeView(scroller.HorizontalOffset + dx, scroller.VerticalOffset + dy, null);
-                }
-                previous = pos;
-                e.Handled = true;
+                await this.ConnectSensors();
             }
         }
-
 
         public async Task RegisterEvents(bool register)
         {
             if (register)
             {
+                await sensor.Barometer.StartReading();
+                await sensor.Humidity.StartReading();
+                await sensor.Magnetometer.StartReading();
+                await sensor.Gyroscope.StartReading(GyroscopeAxes.XYZ);
+                await sensor.Accelerometer.StartReading();
+                await sensor.IRTemperature.StartReading();
                 sensor.Barometer.BarometerMeasurementValueChanged -= OnBarometerMeasurementValueChanged;
                 sensor.Barometer.BarometerMeasurementValueChanged += OnBarometerMeasurementValueChanged;
-                await sensor.Barometer.StartReading();
                 sensor.Humidity.HumidityMeasurementValueChanged -= OnHumidityMeasurementValueChanged;
                 sensor.Humidity.HumidityMeasurementValueChanged += OnHumidityMeasurementValueChanged;
-                await sensor.Humidity.StartReading();
                 sensor.Magnetometer.MagnetometerMeasurementValueChanged -= OnMagnetometerMeasurementValueChanged;
                 sensor.Magnetometer.MagnetometerMeasurementValueChanged += OnMagnetometerMeasurementValueChanged;
-                await sensor.Magnetometer.StartReading(); ;
                 sensor.Gyroscope.GyroscopeMeasurementValueChanged -= OnGyroscopeMeasurementValueChanged;
                 sensor.Gyroscope.GyroscopeMeasurementValueChanged += OnGyroscopeMeasurementValueChanged;
-                await sensor.Gyroscope.StartReading(GyroscopeAxes.XYZ);
                 sensor.Accelerometer.AccelerometerMeasurementValueChanged -= OnAccelerometerMeasurementValueChanged;
                 sensor.Accelerometer.AccelerometerMeasurementValueChanged += OnAccelerometerMeasurementValueChanged;
-                await sensor.Accelerometer.StartReading();
                 sensor.IRTemperature.IRTemperatureMeasurementValueChanged -= OnIRTemperatureMeasurementValueChanged;
                 sensor.IRTemperature.IRTemperatureMeasurementValueChanged += OnIRTemperatureMeasurementValueChanged;
-                await sensor.IRTemperature.StartReading();
                 sensor.Buttons.ButtonValueChanged -= OnButtonValueChanged;
                 sensor.Buttons.ButtonValueChanged += OnButtonValueChanged;
             }
             else
             {
-                sensor.Barometer.BarometerMeasurementValueChanged -= OnBarometerMeasurementValueChanged;
                 await sensor.Barometer.StopReading();
-                sensor.Humidity.HumidityMeasurementValueChanged -= OnHumidityMeasurementValueChanged;
                 await sensor.Humidity.StopReading();
-                sensor.Magnetometer.MagnetometerMeasurementValueChanged -= OnMagnetometerMeasurementValueChanged;
                 await sensor.Magnetometer.StopReading();
-                sensor.Gyroscope.GyroscopeMeasurementValueChanged -= OnGyroscopeMeasurementValueChanged;
                 await sensor.Gyroscope.StopReading();
-                sensor.Accelerometer.AccelerometerMeasurementValueChanged -= OnAccelerometerMeasurementValueChanged;
                 await sensor.Accelerometer.StopReading();
-                sensor.IRTemperature.IRTemperatureMeasurementValueChanged -= OnIRTemperatureMeasurementValueChanged;
                 await sensor.IRTemperature.StopReading();
+                sensor.Barometer.BarometerMeasurementValueChanged -= OnBarometerMeasurementValueChanged;
+                sensor.Humidity.HumidityMeasurementValueChanged -= OnHumidityMeasurementValueChanged;
+                sensor.Magnetometer.MagnetometerMeasurementValueChanged -= OnMagnetometerMeasurementValueChanged;
+                sensor.Gyroscope.GyroscopeMeasurementValueChanged -= OnGyroscopeMeasurementValueChanged;
+                sensor.Accelerometer.AccelerometerMeasurementValueChanged -= OnAccelerometerMeasurementValueChanged;
+                sensor.IRTemperature.IRTemperatureMeasurementValueChanged -= OnIRTemperatureMeasurementValueChanged;
                 sensor.Buttons.ButtonValueChanged -= OnButtonValueChanged;
             }
         }
@@ -300,22 +281,41 @@ namespace SensorTag
             }
         }
 
+        bool connecting;
+
         private async Task ConnectSensors()
         {
             try
             {
-                await sensor.Reconnect();
+                HideHelp();
+                connecting = true;
+                if (await sensor.Reconnect())
+                {
+                    await RegisterEvents(true);
+                    await sensor.Accelerometer.SetPeriod(1000); // save battery
+                    SensorList.ItemsSource = tiles;
+                }
+                else
+                {
+                    ShowHelp();
+                }
 
-                RegisterEvents(true);
-
-                SensorList.ItemsSource = tiles;
-
-                await sensor.Accelerometer.SetPeriod(1000); // save battery
             } 
             catch (Exception ex)
             {
                 DisplayMessage(ex.Message);
             }
+            connecting = false;
+        }
+
+        private void ShowHelp()
+        {
+            Help.Visibility = Windows.UI.Xaml.Visibility.Visible;
+        }
+
+        private void HideHelp()
+        {
+            Help.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
         }
 
         private void StartTimer()
@@ -397,10 +397,35 @@ namespace SensorTag
             connected = e.IsConnected;
         }
 
-        private void OnTileClick(object sender, EventArgs e)
+        public async void OnVisibilityChanged(bool visible)
         {
-            TileControl button = (TileControl)sender;
-            TileModel model = (TileModel)button.DataContext;
+            if (visible)
+            {
+                if (!active)
+                {
+                    active = true;
+                    await ConnectSensors();
+                }
+            }
+            else
+            {
+                // we are leaving the app, so disconnect the bluetooth services so other apps can use them.
+                active = false;
+                sensor.Disconnect();
+            }
+        }
+
+        private void OnItemClick(object sender, ItemClickEventArgs e)
+        {
+            TileModel tile = e.ClickedItem as TileModel;
+            if (tile != null)
+            {
+                SelectTile(tile);
+            }
+        }
+
+        private void SelectTile(TileModel model)
+        {
             switch (model.Caption)
             {
                 case "Barometer":
@@ -427,21 +452,11 @@ namespace SensorTag
             }
         }
 
-        public async void OnVisibilityChanged(bool visible)
+        private async void OnRefresh(object sender, RoutedEventArgs e)
         {
-            if (visible)
+            if(!connected && !connecting)
             {
-                if (!active)
-                {
-                    active = true;
-                    await ConnectSensors();
-                }
-            }
-            else
-            {
-                // we are leaving the app, so disconnect the bluetooth services so other apps can use them.
-                active = false;
-                sensor.Disconnect();
+                await this.ConnectSensors();
             }
         }
     }    

@@ -45,8 +45,8 @@ namespace SensorTag.Pages
             ShowMessage("Connecting...");
             try
             {
+                await sensor.Accelerometer.StartReading();
                 sensor.Accelerometer.AccelerometerMeasurementValueChanged += OnAccelerometerMeasurementValueChanged;
-                sensor.Accelerometer.StartReading();
                 period = await sensor.Accelerometer.GetPeriod();
                 SetSensitivity(period.Value);
                 ShowMessage("");
@@ -78,12 +78,12 @@ namespace SensorTag.Pages
             }));
         }
 
-        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        protected async override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            sensor.Accelerometer.AccelerometerMeasurementValueChanged -= OnAccelerometerMeasurementValueChanged;
-            sensor.Accelerometer.StopReading();
             StopTimer();
             base.OnNavigatedFrom(e);
+            sensor.Accelerometer.AccelerometerMeasurementValueChanged -= OnAccelerometerMeasurementValueChanged;
+            await sensor.Accelerometer.StopReading();
         }
 
         AccelerometerMeasurement measurement;

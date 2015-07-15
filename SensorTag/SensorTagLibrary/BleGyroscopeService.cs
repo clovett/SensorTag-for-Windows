@@ -57,10 +57,10 @@ namespace SensorTag
                 if (_gyroscopeValueChanged != null)
                 {
                     _gyroscopeValueChanged = Delegate.Remove(_gyroscopeValueChanged, value);
-                }
-                if (_gyroscopeValueChanged == null)
-                {
-                    UnregisterForValueChangeEvents(GyroscopeCharacteristicUuid);
+                    if (_gyroscopeValueChanged == null)
+                    {
+                        UnregisterForValueChangeEvents(GyroscopeCharacteristicUuid);
+                    }
                 }
             }
         }

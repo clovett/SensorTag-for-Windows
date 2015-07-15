@@ -20,7 +20,8 @@
             <TextBlock x:Name="DeviceName" Text="SensorTag" FontSize="36" Margin="10" />
         </Grid>
 
-        <ListView x:Name="SensorList"  Grid.Row="1">
+        <ListView x:Name="SensorList"  Grid.Row="1" SelectionMode="None"
+                  IsItemClickEnabled="True" ItemClick="OnItemClick">
             <ListView.ItemsPanel>
                 <ItemsPanelTemplate>
                     <WrapGrid Orientation="Horizontal"/>
@@ -28,7 +29,7 @@
             </ListView.ItemsPanel>
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <c:TileControl Click="OnTileClick" Margin="10"
+                    <c:TileControl Margin="10"
                                    />
                 </DataTemplate>
             </ListView.ItemTemplate>
@@ -36,5 +37,28 @@
 
         <TextBlock x:Name="ErrorMessage" Text="" FontSize="24" Margin="10" Grid.Row="2" TextWrapping="Wrap" Foreground="Salmon"/>
 
+        <RichTextBlock x:Name="Help" Grid.Row="1" Margin="10" FontSize="18"  Visibility="Collapsed">
+            <Paragraph>
+                This app is designed to work with the
+                <Hyperlink NavigateUri="http://www.ti.com/tool/cc2541dk-sensor">
+                    <Run>
+                        Texas Instruments CC2541 SensorTag
+                    </Run>
+                </Hyperlink>
+                device.  If you have one of these devices please pair it with your phone
+                using the
+                <Hyperlink NavigateUri="ms-settings-bluetooth:">
+                    <Run >
+                        Bluetooth Settings
+                    </Run>
+                </Hyperlink>
+                page.  Note: use passcode 0000 if prompted.
+            </Paragraph>
+            <Paragraph>
+                <InlineUIContainer>
+                    <Button Margin="0,5,0,0" x:Name="RefreshButton" Click="OnRefresh">Refresh</Button>
+                </InlineUIContainer>
+            </Paragraph>
+        </RichTextBlock>
     </Grid>
 </Page>

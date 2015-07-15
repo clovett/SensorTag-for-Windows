@@ -47,10 +47,10 @@ namespace SensorTag
                 if (_accelerometerValueChanged != null)
                 {
                     _accelerometerValueChanged = Delegate.Remove(_accelerometerValueChanged, value);
-                }
-                if (_accelerometerValueChanged == null)
-                {
-                    UnregisterForValueChangeEvents(AccelerometerCharacteristicUuid);
+                    if (_accelerometerValueChanged == null)
+                    {
+                        UnregisterForValueChangeEvents(AccelerometerCharacteristicUuid);
+                    }
                 }
             }
         }

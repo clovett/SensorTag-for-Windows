@@ -307,6 +307,20 @@ namespace SensorTag
 
         }
 
+        public bool CanNotify(Guid characteristicGuid)
+        {
+
+            try
+            {
+                GattCharacteristic characteristic = _service.GetCharacteristics(characteristicGuid).FirstOrDefault();
+                return (characteristic != null && characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify));
+            }
+            catch
+            {
+            }
+            return false;
+        }
+
         protected void RegisterForValueChangeEvents(Guid guid)
         {
             _requestedCharacteristics.Add(guid);

@@ -52,10 +52,10 @@ namespace SensorTag
                 if (_barometerValueChanged != null)
                 {
                     _barometerValueChanged = Delegate.Remove(_barometerValueChanged, value);
-                }
-                if (_barometerValueChanged == null)
-                {
-                    UnregisterForValueChangeEvents(BarometerCharacteristicUuid);
+                    if (_barometerValueChanged == null)
+                    {
+                        UnregisterForValueChangeEvents(BarometerCharacteristicUuid);
+                    }
                 }
             }
         }

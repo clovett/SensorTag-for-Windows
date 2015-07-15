@@ -54,7 +54,11 @@
                    HorizontalAlignment="Right"
                    Foreground="{ThemeResource HyperlinkDisabledThemeBrush}"/>
 
-        
+
+        <c:ScrollingGraph x:Name="XAxis" Minimum="-15" Maximum="15" ScrollSpeed="100" Grid.Row="1" StrokeThickness="2" Stroke="Red"/>
+        <c:ScrollingGraph x:Name="YAxis" Minimum="-15" Maximum="15" ScrollSpeed="100" Grid.Row="2" StrokeThickness="2" Stroke="Green"/>
+        <c:ScrollingGraph x:Name="ZAxis" Minimum="-50" Maximum="50" ScrollSpeed="100" Grid.Row="3" StrokeThickness="2" Stroke="LightBlue"/>
+
         <c:CompassControl x:Name="XCompass" Width="120" Height="120" Margin="20"
                           Grid.Row="1" Angle="0"/>
 

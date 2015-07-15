@@ -22,19 +22,6 @@ namespace SensorTag.Controls
         public TileControl()
         {
             this.InitializeComponent();
-
-            this.Tilt.TiltCompleted += Tilt_TiltCompleted;
         }
-
-        void Tilt_TiltCompleted(object sender, EventArgs e)
-        {
-            if (Click != null)
-            {
-                Click(this, EventArgs.Empty);
-            }
-        }
-
-        public event EventHandler Click;
-
     }
 }

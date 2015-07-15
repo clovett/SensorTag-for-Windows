@@ -55,7 +55,7 @@ namespace SensorTag
         public BleBarometerService Barometer { get { return _barometerService; } }
 
 
-        public void Disconnect()
+        public async void Disconnect()
         {
             disconnecting = true;
 
@@ -67,7 +67,7 @@ namespace SensorTag
                     {
                         _tempService.Error -= OnServiceError;
                         _tempService.ConnectionChanged -= OnConnectionChanged;
-                        _tempService.StopReading();
+                        await _tempService.StopReading();
                     }
                     catch { }
                     _tempService = null;
@@ -90,7 +90,7 @@ namespace SensorTag
                     {
                         _accelService.Error -= OnServiceError;
                         _accelService.ConnectionChanged -= OnConnectionChanged;
-                        _accelService.StopReading();
+                        await _accelService.StopReading();
                     }
                     catch { }
                     _accelService = null;
@@ -105,7 +105,7 @@ namespace SensorTag
                     {
                         _gyroService.Error -= OnServiceError;
                         _gyroService.ConnectionChanged -= OnConnectionChanged;
-                        _gyroService.StopReading();
+                        await _gyroService.StopReading();
                     }
                     catch { }
                     _gyroService = null;
@@ -119,7 +119,7 @@ namespace SensorTag
                     {
                         _magService.Error -= OnServiceError;
                         _magService.ConnectionChanged -= OnConnectionChanged;
-                        _magService.StopReading();
+                        await _magService.StopReading();
                     }
                     catch { }
                     _magService = null;
@@ -134,7 +134,7 @@ namespace SensorTag
                     {
                         _humidityService.Error -= OnServiceError;
                         _humidityService.ConnectionChanged -= OnConnectionChanged;
-                        _humidityService.StopReading();
+                        await _humidityService.StopReading();
                     }
                     catch { }
                     _humidityService = null;
@@ -149,7 +149,7 @@ namespace SensorTag
                     {
                         _barometerService.Error -= OnServiceError;
                         _barometerService.ConnectionChanged -= OnConnectionChanged;
-                        _barometerService.StopReading();
+                        await _barometerService.StopReading();
                     }
                     catch { }
                     _barometerService = null;
@@ -170,7 +170,7 @@ namespace SensorTag
         bool connecting;
         bool disconnecting;
 
-        public async Task Reconnect()
+        public async Task<bool> Reconnect()
         {
             if (!connecting)
             {
@@ -178,36 +178,37 @@ namespace SensorTag
 
                 try
                 {
-                    connecting = true;
                     OnStatusChanged("connecting...");
 
                     // since all this code is async, user could quit in the middle, hence all the checks
                     // on the "disconnecting" state.
-                    await ConnectIRTemperatureService();
-                    if (disconnecting) return;
+                    if (!await ConnectIRTemperatureService())
+                    {
+                        return false;
+                    };
                     await ConnectButtonService();
-                    if (disconnecting) return;
+                    if (disconnecting) return false;
                     await ConnectAccelerometerService();
-                    if (disconnecting) return;
+                    if (disconnecting) return false;
                     await ConnectGyroscopeService();
-                    if (disconnecting) return;
+                    if (disconnecting) return false;
                     await ConnectMagnetometerService();
-                    if (disconnecting) return;
+                    if (disconnecting) return false;
                     await ConnectHumidityService();
-                    if (disconnecting) return;
+                    if (disconnecting) return false;
                     await ConnectBarometerService();
-                    if (disconnecting) return;
+                    if (disconnecting) return false;
                     OnStatusChanged("connected");
                 }
                 finally
                 {
                     connecting = false;
                 }
-
             }
+            return true;
         }
 
-        private async Task ConnectIRTemperatureService()
+        private async Task<bool> ConnectIRTemperatureService()
         {
             if (_tempService == null)
             {
@@ -218,11 +219,16 @@ namespace SensorTag
                 {
                     this.DeviceName = _tempService.DeviceName;
                     _tempService.ConnectionChanged += OnConnectionChanged;
+                    return true;
                 }
+                _tempService.Error -= OnServiceError;
+                _tempService = null;
+                return false;
             }
+            return true;
         }
 
-        private async Task ConnectButtonService()
+        private async Task<bool> ConnectButtonService()
         {
             if (_buttonService == null)
             {
@@ -233,11 +239,16 @@ namespace SensorTag
                 {
                     this.DeviceName = _buttonService.DeviceName;
                     _buttonService.ConnectionChanged += OnConnectionChanged;
+                    return true;
                 }
+                _buttonService.Error -= OnServiceError;
+                _buttonService = null;
+                return false;
             }
+            return true;
         }
 
-        private async Task ConnectAccelerometerService()
+        private async Task<bool> ConnectAccelerometerService()
         {
             if (_accelService == null)
             {
@@ -248,15 +259,16 @@ namespace SensorTag
                 {
                     DeviceName = "" + _accelService.DeviceName;
                     _accelService.ConnectionChanged += OnConnectionChanged;
-                    _accelService.StopReading();
-                    //_accelService.SetPeriod(100); // 10 times a second.
-                    //int interval = await _accelService.GetPeriod();
-                    //Debug.WriteLine("Reading acceleration every " + interval + "ms");
+                    return true;
                 }
+                _accelService.Error -= OnServiceError;
+                _accelService = null;
+                return false;
             }
+            return true;
         }
 
-        private async Task ConnectGyroscopeService()
+        private async Task<bool> ConnectGyroscopeService()
         {
             if (_gyroService == null)
             {
@@ -267,13 +279,18 @@ namespace SensorTag
                 {
                     DeviceName = "" + _gyroService.DeviceName;
                     _gyroService.ConnectionChanged += OnConnectionChanged;
-
+                    return true;
                 }
+
+                _gyroService.Error -= OnServiceError;
+                _gyroService = null;
+                return false;
             }
+            return true;
         }
 
 
-        private async Task ConnectMagnetometerService()
+        private async Task<bool> ConnectMagnetometerService()
         {
             if (_magService == null)
             {
@@ -284,14 +301,16 @@ namespace SensorTag
                 {
                     DeviceName = "" + _magService.DeviceName;
                     _magService.ConnectionChanged += OnConnectionChanged;
-
-                    //int interval = await _magService.GetPeriod();
-                    //Debug.WriteLine("Reading magnetometer every " + interval + "ms");
+                    return true;
                 }
+                _magService.Error -= OnServiceError;
+                _magService = null;
+                return false;
             }
+            return true;
         }
 
-        private async Task ConnectHumidityService()
+        private async Task<bool> ConnectHumidityService()
         {
             if (_humidityService == null)
             {
@@ -302,12 +321,17 @@ namespace SensorTag
                 {
                     DeviceName = "" + _humidityService.DeviceName;
                     _humidityService.ConnectionChanged += OnConnectionChanged;
+                    return true;
                 }
+                _humidityService.Error -= OnServiceError;
+                _humidityService = null;
+                return false;
             }
+            return true;
         }
 
 
-        private async Task ConnectBarometerService()
+        private async Task<bool> ConnectBarometerService()
         {
             if (_barometerService == null)
             {
@@ -321,8 +345,13 @@ namespace SensorTag
                     _barometerService.ConnectionChanged += OnConnectionChanged;
                     await _barometerService.StartCalibration();
                     OnStatusChanged("calibrated");
+                    return true;
                 }
+                _barometerService.Error -= OnServiceError;
+                _barometerService = null;
+                return false;
             }
+            return true;
         }
 
         public event EventHandler<string> ServiceError;

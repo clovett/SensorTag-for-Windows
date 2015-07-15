@@ -32,9 +32,9 @@ namespace SensorTag.Pages
             this.InitializeComponent();
 
             sensor = SensorTag.Instance;
-            CelciusButton.IsChecked = Settings.Instance.Celcius;
-            FahrenheitButton.IsChecked = !Settings.Instance.Celcius;
-            celcius = true;
+            celcius = Settings.Instance.Celcius;
+            CelciusButton.IsChecked = celcius;
+            FahrenheitButton.IsChecked = !celcius;
         }
 
         /// <summary>
@@ -48,7 +48,7 @@ namespace SensorTag.Pages
             try
             {
                 sensor.IRTemperature.IRTemperatureMeasurementValueChanged += IRTemperature_IRTemperatureMeasurementValueChanged;
-                sensor.Humidity.StartReading();
+                var nowait = sensor.Humidity.StartReading();
                 ShowMessage("");
             }
             catch (Exception ex) {
@@ -69,7 +69,7 @@ namespace SensorTag.Pages
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             sensor.IRTemperature.IRTemperatureMeasurementValueChanged -= IRTemperature_IRTemperatureMeasurementValueChanged;
-            sensor.Barometer.StopReading();
+            var nowait = sensor.Barometer.StopReading();
             base.OnNavigatedFrom(e);
         }
 
@@ -103,12 +103,12 @@ namespace SensorTag.Pages
             if (visible)
             {
                 sensor.IRTemperature.IRTemperatureMeasurementValueChanged += IRTemperature_IRTemperatureMeasurementValueChanged;
-                sensor.Humidity.StartReading();
+                var nowait = sensor.Humidity.StartReading();
             }
             else
             {
                 sensor.IRTemperature.IRTemperatureMeasurementValueChanged -= IRTemperature_IRTemperatureMeasurementValueChanged;
-                sensor.Humidity.StopReading();
+                var nowait = sensor.Humidity.StopReading();
             }
         }
         private void StartTimer()

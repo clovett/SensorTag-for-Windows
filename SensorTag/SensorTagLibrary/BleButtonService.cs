@@ -21,8 +21,8 @@ namespace SensorTag
         {
         }
 
-        static Guid ButtonServiceUuid = Guid.Parse("0000ffe0-0000-1000-8000-00805f9b34fb");
-        static Guid ButtonCharacteristicUuid = Guid.Parse("0000ffe1-0000-1000-8000-00805f9b34fb");
+        public static Guid ButtonServiceUuid = Guid.Parse("0000ffe0-0000-1000-8000-00805f9b34fb");
+        public static Guid ButtonCharacteristicUuid = Guid.Parse("0000ffe1-0000-1000-8000-00805f9b34fb");
         
         Delegate _buttonValueChanged;
 
@@ -45,10 +45,10 @@ namespace SensorTag
                 if (_buttonValueChanged != null)
                 {
                     _buttonValueChanged = Delegate.Remove(_buttonValueChanged, value);
-                }
-                if (_buttonValueChanged == null)
-                {
-                    UnregisterForValueChangeEvents(ButtonCharacteristicUuid);
+                    if (_buttonValueChanged == null)
+                    {
+                        UnregisterForValueChangeEvents(ButtonCharacteristicUuid);
+                    }
                 }
             }
         }
