@@ -80,14 +80,24 @@ namespace SensorTag
             return -1;
         }
 
+        bool isReading;
+
         public async Task StartReading()
         {
-            await WriteCharacteristicByte(BarometerCharacteristicConfigUuid, 1);
+            if (!isReading)
+            {
+                await WriteCharacteristicByte(BarometerCharacteristicConfigUuid, 1);
+                isReading = true;
+            }
         }
 
         public async Task StopReading()
         {
-            await WriteCharacteristicByte(BarometerCharacteristicConfigUuid, 0);
+            if (isReading)
+            {
+                isReading = false;
+                await WriteCharacteristicByte(BarometerCharacteristicConfigUuid, 0);
+            }
         }
 
 

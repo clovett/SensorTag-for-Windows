@@ -25,6 +25,7 @@ namespace SensorTag
     sealed partial class App : Application
     {
         Settings _settings;
+        SensorTag _sensor = new SensorTag();
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code

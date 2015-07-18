@@ -38,19 +38,19 @@ namespace SensorTag.Pages
         /// </summary>
         /// <param name="e">Event data that describes how this page was reached.
         /// This parameter is typically used to configure the page.</param>
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
             ShowMessage("Connecting...");
             try
             {
                 // gives us rotational movement every second
+                await sensor.Gyroscope.StartReading(GyroscopeAxes.XYZ);
+                await sensor.Magnetometer.StartReading();
                 sensor.Gyroscope.GyroscopeMeasurementValueChanged += Gyroscope_GyroscopeMeasurementValueChanged;
-                sensor.Gyroscope.StartReading(GyroscopeAxes.XYZ);
 
                 // use the magnetometer for absolute position
                 sensor.Magnetometer.MagnetometerMeasurementValueChanged += Magnetometer_MagnetometerMeasurementValueChanged;
                 sensor.Magnetometer.SetPeriod(100); // fastest reading
-                sensor.Magnetometer.StartReading();
                 ShowMessage("");
             }
             catch (Exception ex)
@@ -78,7 +78,7 @@ namespace SensorTag.Pages
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             sensor.Gyroscope.GyroscopeMeasurementValueChanged -= Gyroscope_GyroscopeMeasurementValueChanged;
-            sensor.Gyroscope.StopReading();
+            //sensor.Gyroscope.StopReading();
             StopTimer();
             base.OnNavigatedFrom(e);
         }

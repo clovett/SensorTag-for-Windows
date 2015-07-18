@@ -16,7 +16,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Grid Background="#00b2f0">
+        <Grid Background="{StaticResource PageTitleBackgroundColor}">
             <TextBlock x:Name="DeviceName" Text="SensorTag" FontSize="36" Margin="10" />
         </Grid>
 

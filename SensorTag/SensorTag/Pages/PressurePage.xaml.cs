@@ -55,13 +55,13 @@ namespace SensorTag.Pages
         /// </summary>
         /// <param name="e">Event data that describes how this page was reached.
         /// This parameter is typically used to configure the page.</param>
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
             ShowMessage("Connecting...");
             try
             {
+                await sensor.Barometer.StartReading();
                 sensor.Barometer.BarometerMeasurementValueChanged += OnBarometerMeasurementValueChanged;
-                sensor.Barometer.StartReading();
                 //period = await sensor.Barometer.GetPeriod();
                 //SensitivitySlider.Value = period.Value;
                 ShowMessage("");
@@ -83,7 +83,7 @@ namespace SensorTag.Pages
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             sensor.Barometer.BarometerMeasurementValueChanged -= OnBarometerMeasurementValueChanged;
-            sensor.Barometer.StopReading();
+            //sensor.Barometer.StopReading();
             base.OnNavigatedFrom(e);
         }
 

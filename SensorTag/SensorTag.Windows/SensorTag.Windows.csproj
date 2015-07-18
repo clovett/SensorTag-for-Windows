@@ -118,24 +118,31 @@
   <ItemGroup>
     <Compile Include="..\SensorTag\Pages\AccelerometerPage.xaml.cs">
       <Link>Pages\AccelerometerPage.xaml.cs</Link>
+      <DependentUpon>AccelerometerPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="..\SensorTag\Pages\ButtonPage.xaml.cs">
       <Link>Pages\ButtonPage.xaml.cs</Link>
+      <DependentUpon>ButtonPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="..\SensorTag\Pages\GyroPage.xaml.cs">
       <Link>Pages\GyroPage.xaml.cs</Link>
+      <DependentUpon>GyroPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="..\SensorTag\Pages\HumidityPage.xaml.cs">
       <Link>Pages\HumidityPage.xaml.cs</Link>
+      <DependentUpon>HumidityPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="..\SensorTag\Pages\IRTemperaturePage.xaml.cs">
       <Link>Pages\IRTemperaturePage.xaml.cs</Link>
+      <DependentUpon>IRTemperaturePage.xaml</DependentUpon>
     </Compile>
     <Compile Include="..\SensorTag\Pages\MagnetometerPage.xaml.cs">
       <Link>Pages\MagnetometerPage.xaml.cs</Link>
+      <DependentUpon>MagnetometerPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="..\SensorTag\Pages\PressurePage.xaml.cs">
       <Link>Pages\PressurePage.xaml.cs</Link>
+      <DependentUpon>PressurePage.xaml</DependentUpon>
     </Compile>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>

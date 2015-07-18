@@ -81,15 +81,25 @@ namespace SensorTag
             await WriteCharacteristicByte(IRTemperatureCharacteristicPeriodUuid, (byte)delay);
         }
 #endif 
+        
+        bool isReading;
 
         public async Task StartReading()
         {
-            await WriteCharacteristicByte(IRTemperatureCharacteristicConfigUuid, 1);
+            if (!isReading)
+            {
+                await WriteCharacteristicByte(IRTemperatureCharacteristicConfigUuid, 1);
+                isReading = true;
+            }
         }
 
         public async Task StopReading()
         {
-            await WriteCharacteristicByte(IRTemperatureCharacteristicConfigUuid, 0);
+            if (isReading)
+            {
+                isReading = false;
+                await WriteCharacteristicByte(IRTemperatureCharacteristicConfigUuid, 0);
+            }
         }
 
         private void OnIRTemperatureMeasurementValueChanged(IRTemperatureMeasurementEventArgs args)

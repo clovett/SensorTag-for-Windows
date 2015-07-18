@@ -18,6 +18,7 @@ namespace SensorTag
         BleHumidityService _humidityService;
         BleBarometerService _barometerService;
         string deviceName;
+        bool connected;
 
         static SensorTag _instance;
 
@@ -32,6 +33,9 @@ namespace SensorTag
                 return _instance;
             }
         }
+
+        public bool Connected { get { return connected; } }
+
 
         public string DeviceName
         {
@@ -58,6 +62,7 @@ namespace SensorTag
         public async void Disconnect()
         {
             disconnecting = true;
+            connected = false;
 
             if (_tempService != null)
             {
@@ -172,7 +177,7 @@ namespace SensorTag
 
         public async Task<bool> Reconnect()
         {
-            if (!connecting)
+            if (!connecting && !connected)
             {
                 disconnecting = false;
 
@@ -198,6 +203,7 @@ namespace SensorTag
                     if (disconnecting) return false;
                     await ConnectBarometerService();
                     if (disconnecting) return false;
+                    connected = true;
                     OnStatusChanged("connected");
                 }
                 finally

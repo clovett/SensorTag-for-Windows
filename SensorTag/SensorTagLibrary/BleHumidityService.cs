@@ -77,14 +77,24 @@ namespace SensorTag
             return -1;
         }
 
+        bool isReading;
+
         public async Task StartReading()
         {
-            await WriteCharacteristicByte(HumidityCharacteristicConfigUuid, 1);
+            if (!isReading)
+            {
+                await WriteCharacteristicByte(HumidityCharacteristicConfigUuid, 1);
+                isReading = true;
+            }
         }
 
         public async Task StopReading()
         {
-            await WriteCharacteristicByte(HumidityCharacteristicConfigUuid, 0);
+            if (isReading)
+            {
+                isReading = false;
+                await WriteCharacteristicByte(HumidityCharacteristicConfigUuid, 0);
+            }
         }
         
 

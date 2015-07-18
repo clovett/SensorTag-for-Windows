@@ -75,14 +75,24 @@ namespace SensorTag
             return -1;
         }
 
+        bool isReading;
+
         public async Task StartReading()
         {
-            await WriteCharacteristicByte(MagnetometerCharacteristicConfigUuid, 1);
+            if (!isReading)
+            {
+                await WriteCharacteristicByte(MagnetometerCharacteristicConfigUuid, 1);
+                isReading = true;
+            }
         }
 
         public async Task StopReading()
         {
-            await WriteCharacteristicByte(MagnetometerCharacteristicConfigUuid, 0);
+            if (isReading)
+            {
+                isReading = false;
+                await WriteCharacteristicByte(MagnetometerCharacteristicConfigUuid, 0);
+            }
         }
         
         /// <summary>

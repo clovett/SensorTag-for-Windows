@@ -2,6 +2,7 @@
 using SensorTag.Pages;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -31,23 +32,18 @@ namespace SensorTag
     {
         DispatcherTimer _timer;
         SensorTag sensor;
-        List<TileModel> tiles = new List<TileModel>();
+        ObservableCollection<TileModel> tiles = new ObservableCollection<TileModel>();
 
         public MainPage()
         {
             this.InitializeComponent();
+
             // get the BLE services that we can share across pages.
             sensor = SensorTag.Instance;
 
             Clear();
 
-            tiles.Add(new TileModel() { Caption = "Accelerometer", Icon = new BitmapImage(new Uri("ms-appx:/Assets/Accelerometer.png")) });
-            tiles.Add(new TileModel() { Caption = "Gyroscope", Icon = new BitmapImage(new Uri("ms-appx:/Assets/Gyroscope.png")) });
-            tiles.Add(new TileModel() { Caption = "Magnetometer", Icon = new BitmapImage(new Uri("ms-appx:/Assets/Compass.png")) });
-            tiles.Add(new TileModel() { Caption = "IR Temperature", Icon = new BitmapImage(new Uri("ms-appx:/Assets/IRTemperature.png")) });
-            tiles.Add(new TileModel() { Caption = "Humidity", Icon = new BitmapImage(new Uri("ms-appx:/Assets/Humidity.png")) });
-            tiles.Add(new TileModel() { Caption = "Barometer", Icon = new BitmapImage(new Uri("ms-appx:/Assets/Barometer.png")) });
-            tiles.Add(new TileModel() { Caption = "Buttons", Icon = new BitmapImage(new Uri("ms-appx:/Assets/Buttons.png")) });
+            SensorList.ItemsSource = tiles;
 
             // these ones we always listen to.
             sensor.ServiceError += OnServiceError;
@@ -66,47 +62,183 @@ namespace SensorTag
             }
         }
 
+        public async Task RegisterBarometer(bool register) 
+        {
+            try
+            {
+                if (register)
+                {
+                    await sensor.Barometer.StartReading();
+                    sensor.Barometer.BarometerMeasurementValueChanged -= OnBarometerMeasurementValueChanged;
+                    sensor.Barometer.BarometerMeasurementValueChanged += OnBarometerMeasurementValueChanged;
+                    AddTile(new TileModel() { Caption = "Barometer", Icon = new BitmapImage(new Uri("ms-appx:/Assets/Barometer.png")) });
+                }
+                else
+                {
+                    RemoveTiles(from t in tiles where t.Caption == "Barometer" select t);
+                    await sensor.Barometer.StopReading();
+                    sensor.Barometer.BarometerMeasurementValueChanged -= OnBarometerMeasurementValueChanged;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("### Error registering barometer: " + ex.Message);
+            }
+        }
+
+        public async Task RegisterAccelerometer(bool register)
+        {
+            try
+            {
+                if (register)
+                {
+                    await sensor.Accelerometer.StartReading();
+                    sensor.Accelerometer.AccelerometerMeasurementValueChanged -= OnAccelerometerMeasurementValueChanged;
+                    sensor.Accelerometer.AccelerometerMeasurementValueChanged += OnAccelerometerMeasurementValueChanged;
+                    AddTile(new TileModel() { Caption = "Accelerometer", Icon = new BitmapImage(new Uri("ms-appx:/Assets/Accelerometer.png")) });
+                }
+                else
+                {
+                    RemoveTiles(from t in tiles where t.Caption == "Accelerometer" select t);
+                    await sensor.Accelerometer.StopReading();
+                    sensor.Accelerometer.AccelerometerMeasurementValueChanged -= OnAccelerometerMeasurementValueChanged;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("### Error registering Accelerometer: " + ex.Message);
+            }
+        }
+
+        public async Task RegisterGyroscope(bool register)
+        {
+            try
+            {
+                if (register)
+                {
+                    await sensor.Gyroscope.StartReading(GyroscopeAxes.XYZ);
+                    sensor.Gyroscope.GyroscopeMeasurementValueChanged -= OnGyroscopeMeasurementValueChanged;
+                    sensor.Gyroscope.GyroscopeMeasurementValueChanged += OnGyroscopeMeasurementValueChanged;
+                    AddTile(new TileModel() { Caption = "Gyroscope", Icon = new BitmapImage(new Uri("ms-appx:/Assets/Gyroscope.png")) });
+                }
+                else
+                {
+                    RemoveTiles(from t in tiles where t.Caption == "Gyroscope" select t);
+                    await sensor.Gyroscope.StopReading();
+                    sensor.Gyroscope.GyroscopeMeasurementValueChanged -= OnGyroscopeMeasurementValueChanged;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("### Error registering Gyroscope: " + ex.Message);
+            }
+        }
+
+        public async Task RegisterMagnetometer(bool register)
+        {
+            try
+            {
+                if (register)
+                {
+                    await sensor.Magnetometer.StartReading();
+                    sensor.Magnetometer.MagnetometerMeasurementValueChanged -= OnMagnetometerMeasurementValueChanged;
+                    sensor.Magnetometer.MagnetometerMeasurementValueChanged += OnMagnetometerMeasurementValueChanged;
+                    tiles.Add(new TileModel() { Caption = "Magnetometer", Icon = new BitmapImage(new Uri("ms-appx:/Assets/Compass.png")) });
+                }
+                else
+                {
+                    RemoveTiles(from t in tiles where t.Caption == "Magnetometer" select t);
+                    await sensor.Magnetometer.StopReading();
+                    sensor.Magnetometer.MagnetometerMeasurementValueChanged -= OnMagnetometerMeasurementValueChanged;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("### Error registering Magnetometer: " + ex.Message);
+            }
+        }
+
+        public async Task RegisterIRTemperature(bool register)
+        {
+            try
+            {
+                if (register)
+                {
+                    await sensor.IRTemperature.StartReading();
+                    sensor.IRTemperature.IRTemperatureMeasurementValueChanged -= OnIRTemperatureMeasurementValueChanged;
+                    sensor.IRTemperature.IRTemperatureMeasurementValueChanged += OnIRTemperatureMeasurementValueChanged;
+                    tiles.Add(new TileModel() { Caption = "IR Temperature", Icon = new BitmapImage(new Uri("ms-appx:/Assets/IRTemperature.png")) });
+                }
+                else
+                {
+                    RemoveTiles(from t in tiles where t.Caption == "IR Temperature" select t);
+                    await sensor.IRTemperature.StopReading();
+                    sensor.IRTemperature.IRTemperatureMeasurementValueChanged -= OnIRTemperatureMeasurementValueChanged;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("### Error registering IRTemperature: " + ex.Message);
+            }
+        }
+
+
+        public async Task RegisterHumidity(bool register)
+        {
+            try
+            {
+                if (register)
+                {
+                    await sensor.Humidity.StartReading();
+                    sensor.Humidity.HumidityMeasurementValueChanged -= OnHumidityMeasurementValueChanged;
+                    sensor.Humidity.HumidityMeasurementValueChanged += OnHumidityMeasurementValueChanged;
+                    tiles.Add(new TileModel() { Caption = "Humidity", Icon = new BitmapImage(new Uri("ms-appx:/Assets/Humidity.png")) });
+                }
+                else
+                {
+                    RemoveTiles(from t in tiles where t.Caption == "Humidity" select t);
+                    await sensor.Humidity.StopReading();
+                    sensor.Humidity.HumidityMeasurementValueChanged -= OnHumidityMeasurementValueChanged;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("### Error registering Humidity: " + ex.Message);
+            }
+        }
+
+        public async Task RegisterButtons(bool register)
+        {
+            try
+            {
+                if (register)
+                {
+                    sensor.Buttons.ButtonValueChanged -= OnButtonValueChanged;
+                    sensor.Buttons.ButtonValueChanged += OnButtonValueChanged;
+                    tiles.Add(new TileModel() { Caption = "Buttons", Icon = new BitmapImage(new Uri("ms-appx:/Assets/Buttons.png")) });
+                }
+                else
+                {
+                    RemoveTiles(from t in tiles where t.Caption == "Humidity" select t);
+                    sensor.Buttons.ButtonValueChanged -= OnButtonValueChanged;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("### Error registering Humidity: " + ex.Message);
+            }
+        }
+
         public async Task RegisterEvents(bool register)
         {
-            if (register)
-            {
-                await sensor.Barometer.StartReading();
-                await sensor.Humidity.StartReading();
-                await sensor.Magnetometer.StartReading();
-                await sensor.Gyroscope.StartReading(GyroscopeAxes.XYZ);
-                await sensor.Accelerometer.StartReading();
-                await sensor.IRTemperature.StartReading();
-                sensor.Barometer.BarometerMeasurementValueChanged -= OnBarometerMeasurementValueChanged;
-                sensor.Barometer.BarometerMeasurementValueChanged += OnBarometerMeasurementValueChanged;
-                sensor.Humidity.HumidityMeasurementValueChanged -= OnHumidityMeasurementValueChanged;
-                sensor.Humidity.HumidityMeasurementValueChanged += OnHumidityMeasurementValueChanged;
-                sensor.Magnetometer.MagnetometerMeasurementValueChanged -= OnMagnetometerMeasurementValueChanged;
-                sensor.Magnetometer.MagnetometerMeasurementValueChanged += OnMagnetometerMeasurementValueChanged;
-                sensor.Gyroscope.GyroscopeMeasurementValueChanged -= OnGyroscopeMeasurementValueChanged;
-                sensor.Gyroscope.GyroscopeMeasurementValueChanged += OnGyroscopeMeasurementValueChanged;
-                sensor.Accelerometer.AccelerometerMeasurementValueChanged -= OnAccelerometerMeasurementValueChanged;
-                sensor.Accelerometer.AccelerometerMeasurementValueChanged += OnAccelerometerMeasurementValueChanged;
-                sensor.IRTemperature.IRTemperatureMeasurementValueChanged -= OnIRTemperatureMeasurementValueChanged;
-                sensor.IRTemperature.IRTemperatureMeasurementValueChanged += OnIRTemperatureMeasurementValueChanged;
-                sensor.Buttons.ButtonValueChanged -= OnButtonValueChanged;
-                sensor.Buttons.ButtonValueChanged += OnButtonValueChanged;
-            }
-            else
-            {
-                await sensor.Barometer.StopReading();
-                await sensor.Humidity.StopReading();
-                await sensor.Magnetometer.StopReading();
-                await sensor.Gyroscope.StopReading();
-                await sensor.Accelerometer.StopReading();
-                await sensor.IRTemperature.StopReading();
-                sensor.Barometer.BarometerMeasurementValueChanged -= OnBarometerMeasurementValueChanged;
-                sensor.Humidity.HumidityMeasurementValueChanged -= OnHumidityMeasurementValueChanged;
-                sensor.Magnetometer.MagnetometerMeasurementValueChanged -= OnMagnetometerMeasurementValueChanged;
-                sensor.Gyroscope.GyroscopeMeasurementValueChanged -= OnGyroscopeMeasurementValueChanged;
-                sensor.Accelerometer.AccelerometerMeasurementValueChanged -= OnAccelerometerMeasurementValueChanged;
-                sensor.IRTemperature.IRTemperatureMeasurementValueChanged -= OnIRTemperatureMeasurementValueChanged;
-                sensor.Buttons.ButtonValueChanged -= OnButtonValueChanged;
-            }
+            await RegisterBarometer(register);
+            await RegisterAccelerometer(register);
+            await RegisterGyroscope(register);
+            await RegisterMagnetometer(register);
+            await RegisterIRTemperature(register);
+            await RegisterHumidity(register);
+            await RegisterButtons(register);
+
         }
 
         void OnSensorPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -276,6 +408,7 @@ namespace SensorTag
         {
             if (!active)
             {
+                Clear();
                 active = true;
                 await ConnectSensors();
             }
@@ -289,11 +422,11 @@ namespace SensorTag
             {
                 HideHelp();
                 connecting = true;
-                if (await sensor.Reconnect())
+                if (sensor.Connected || await sensor.Reconnect())
                 {
+                    connected = true;
                     await RegisterEvents(true);
                     await sensor.Accelerometer.SetPeriod(1000); // save battery
-                    SensorList.ItemsSource = tiles;
                 }
                 else
                 {
@@ -303,7 +436,8 @@ namespace SensorTag
             } 
             catch (Exception ex)
             {
-                DisplayMessage(ex.Message);
+                DisplayMessage("Connect failed, please ensure sensor is not in use on another machine");
+                ShowHelp();
             }
             connecting = false;
         }
@@ -363,6 +497,7 @@ namespace SensorTag
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             active = false;
+            // stay connected since page we are navigating to probably also wants to use the sensor.
             //RegisterEvents(false);
             base.OnNavigatedFrom(e);
         }
@@ -457,6 +592,22 @@ namespace SensorTag
             if(!connected && !connecting)
             {
                 await this.ConnectSensors();
+            }
+        }
+
+        private void AddTile(TileModel model)
+        {
+            if (!(from t in tiles where t.Caption == model.Caption select t).Any())
+            {
+                tiles.Add(model);
+            }
+        }
+
+        private void RemoveTiles(IEnumerable<TileModel> enumerable)
+        {
+            foreach (TileModel tile in enumerable.ToArray())
+            {
+                tiles.Remove(tile);
             }
         }
     }    

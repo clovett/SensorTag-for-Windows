@@ -75,14 +75,24 @@ namespace SensorTag
             return -1;
         }
 
+        bool isReading;
+
         public async Task StartReading()
         {
-            await WriteCharacteristicByte(AccelerometerCharacteristicConfigUuid, 1);
+            if (!isReading)
+            {
+                await WriteCharacteristicByte(AccelerometerCharacteristicConfigUuid, 1);
+                isReading = true;
+            }
         }
 
         public async Task StopReading()
         {
-            await WriteCharacteristicByte(AccelerometerCharacteristicConfigUuid, 0);
+            if (isReading)
+            {
+                isReading = false;
+                await WriteCharacteristicByte(AccelerometerCharacteristicConfigUuid, 0);
+            }
         }
         
         /// <summary>

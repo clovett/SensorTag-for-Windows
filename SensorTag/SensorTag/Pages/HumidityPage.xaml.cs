@@ -38,13 +38,13 @@ namespace SensorTag.Pages
         /// </summary>
         /// <param name="e">Event data that describes how this page was reached.
         /// This parameter is typically used to configure the page.</param>
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
             ShowMessage("Connecting...");
             try
             {
+                await sensor.Humidity.StartReading();
                 sensor.Humidity.HumidityMeasurementValueChanged += Humidity_HumidityMeasurementValueChanged;
-                sensor.Humidity.StartReading();
                 ShowMessage("");
             }
             catch (Exception ex) {
@@ -64,7 +64,7 @@ namespace SensorTag.Pages
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             sensor.Humidity.HumidityMeasurementValueChanged -= Humidity_HumidityMeasurementValueChanged;
-            sensor.Barometer.StopReading();
+            //sensor.Barometer.StopReading();
             base.OnNavigatedFrom(e);
         }
 

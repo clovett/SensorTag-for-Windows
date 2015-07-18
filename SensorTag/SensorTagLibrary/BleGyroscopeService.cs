@@ -13,6 +13,7 @@ namespace SensorTag
 {
     public enum GyroscopeAxes
     {
+        None = 0,
         X = 1,
         Y = 2,
         XY = 3,
@@ -85,6 +86,9 @@ namespace SensorTag
             return -1;
         }
 
+        
+        GyroscopeAxes readingAxes = GyroscopeAxes.None;
+
         /// <summary>
         /// Enable getting GyroscopeMeasurementValueChanged events on the given axes.
         /// The gyro produces new values about once per second and that period cannot be changed.
@@ -92,13 +96,21 @@ namespace SensorTag
         /// <param name="enableAxes"></param>
         public async Task StartReading(GyroscopeAxes enableAxes)
         {
-            byte value = (byte)enableAxes;
-            await WriteCharacteristicByte(GyroscopeCharacteristicConfigUuid, value);
+            if (readingAxes != enableAxes)
+            {
+                byte value = (byte)enableAxes;
+                await WriteCharacteristicByte(GyroscopeCharacteristicConfigUuid, value);
+                readingAxes = enableAxes;
+            }
         }
 
         public async Task StopReading()
         {
-            await WriteCharacteristicByte(GyroscopeCharacteristicConfigUuid, 0);
+            if (readingAxes != GyroscopeAxes.None)
+            {
+                readingAxes = GyroscopeAxes.None;
+                await WriteCharacteristicByte(GyroscopeCharacteristicConfigUuid, 0);
+            }
         }
         
         private void OnGyroscopeMeasurementValueChanged(GyroscopeMeasurementEventArgs args)

@@ -9,6 +9,7 @@
                 <ResourceDictionary Source="Common/StandardStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <SolidColorBrush x:Key="PhoneAccentBrush" Color="Teal"/>
+            <SolidColorBrush x:Key="PageTitleBackgroundColor" Color="Red"/>
         </ResourceDictionary>
 
     </Application.Resources>

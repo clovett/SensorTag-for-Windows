@@ -63,11 +63,11 @@ namespace SensorTag.Pages
             }));
         }
 
-        protected async override void OnNavigatedFrom(NavigationEventArgs e)
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
             sensor.Magnetometer.MagnetometerMeasurementValueChanged -= Magnetometer_MagnetometerMeasurementValueChanged;
-            await sensor.Barometer.StopReading();
+            //await sensor.Barometer.StopReading();
         }
 
         MagnetometerMeasurement measurement;

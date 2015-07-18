@@ -78,12 +78,12 @@ namespace SensorTag.Pages
             }));
         }
 
-        protected async override void OnNavigatedFrom(NavigationEventArgs e)
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             StopTimer();
             base.OnNavigatedFrom(e);
             sensor.Accelerometer.AccelerometerMeasurementValueChanged -= OnAccelerometerMeasurementValueChanged;
-            await sensor.Accelerometer.StopReading();
+            //await sensor.Accelerometer.StopReading();
         }
 
         AccelerometerMeasurement measurement;
