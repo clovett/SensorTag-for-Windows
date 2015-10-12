@@ -33,6 +33,11 @@ namespace SensorTag
         {
         }
 
+        /// <summary>
+        /// The version of the SensorTag device.  1=CC2541, 2=CC2650.
+        /// </summary>
+        public int Version { get; set; }
+
         static Guid GyroscopeServiceUuid = Guid.Parse("f000aa50-0451-4000-b000-000000000000");
         static Guid GyroscopeCharacteristicUuid = Guid.Parse("f000aa51-0451-4000-b000-000000000000");
         static Guid GyroscopeCharacteristicConfigUuid = Guid.Parse("f000aa52-0451-4000-b000-000000000000");
@@ -122,9 +127,9 @@ namespace SensorTag
         }
 
 
-        public async Task<bool> ConnectAsync()
+        public async Task<bool> ConnectAsync(string deviceContainerId)
         {
-            return await this.ConnectAsync(GyroscopeServiceUuid, null);
+            return await this.ConnectAsync(GyroscopeServiceUuid, deviceContainerId);
         }
 
         protected override void OnCharacteristicValueChanged(GattCharacteristic sender, GattValueChangedEventArgs eventArgs)
@@ -157,7 +162,6 @@ namespace SensorTag
                 }
             }
         }
-
     }
 
 

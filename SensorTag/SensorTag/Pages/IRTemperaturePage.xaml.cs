@@ -31,7 +31,7 @@ namespace SensorTag.Pages
         {
             this.InitializeComponent();
 
-            sensor = SensorTag.Instance;
+            sensor = ((App)App.Current).SensorTag;
             celcius = Settings.Instance.Celcius;
             CelciusButton.IsChecked = celcius;
             FahrenheitButton.IsChecked = !celcius;

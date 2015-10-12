@@ -21,6 +21,12 @@ namespace SensorTag
         {
         }
 
+        /// <summary>
+        /// The version of the SensorTag device.  1=CC2541, 2=CC2650.
+        /// </summary>
+        public int Version { get; set; }
+
+
         public static Guid ButtonServiceUuid = Guid.Parse("0000ffe0-0000-1000-8000-00805f9b34fb");
         public static Guid ButtonCharacteristicUuid = Guid.Parse("0000ffe1-0000-1000-8000-00805f9b34fb");
         
@@ -61,9 +67,9 @@ namespace SensorTag
             }
         }
 
-        public async Task<bool> ConnectAsync()
+        public async Task<bool> ConnectAsync(string deviceContainerId)
         {
-            return await this.ConnectAsync(ButtonServiceUuid, null);
+            return await this.ConnectAsync(ButtonServiceUuid, deviceContainerId);
         }
 
         protected override void OnCharacteristicValueChanged(GattCharacteristic sender, GattValueChangedEventArgs eventArgs)

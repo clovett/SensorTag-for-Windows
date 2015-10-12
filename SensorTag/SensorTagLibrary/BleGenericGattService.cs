@@ -152,7 +152,7 @@ namespace SensorTag
         internal static readonly string CONTAINER_ID_PROPERTY_NAME = "System.Devices.ContainerId";
         private static readonly string CONNECTED_FLAG_PROPERTY_NAME = "System.Devices.Connected";
 
-        public async Task<IEnumerable<BleGattDeviceInfo>> FindMatchingDevices(Guid serviceGuid)
+        public static async Task<IEnumerable<BleGattDeviceInfo>> FindMatchingDevices(Guid serviceGuid)
         {
             var devices = await DeviceInformation.FindAllAsync(GattDeviceService.GetDeviceSelectorFromUuid(
                                                                  serviceGuid), new string[] {

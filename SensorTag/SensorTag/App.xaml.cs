@@ -26,6 +26,7 @@ namespace SensorTag
     sealed partial class App : Application
     {
         Settings _settings;
+        SensorTag _sensor;
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -38,6 +39,16 @@ namespace SensorTag
             HardwareButtons.BackPressed += HardwareButtons_BackPressed;
 
         }
+
+        /// <summary>
+        /// The selected SensorTag device
+        /// </summary>
+        public SensorTag SensorTag
+        {
+            get { return _sensor; }
+            set { _sensor = value; }
+        }
+
 
         /// <summary>
         /// Handles back button press.  If app is at the root page of app, don't go back and the

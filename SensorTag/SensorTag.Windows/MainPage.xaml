@@ -39,10 +39,16 @@
 
         <RichTextBlock x:Name="Help" Grid.Row="1" Margin="10" FontSize="18"  Visibility="Collapsed">
             <Paragraph>
-                This app is designed to work with the
+                This app is designed to work with the Texas Instruments
                 <Hyperlink NavigateUri="http://www.ti.com/tool/cc2541dk-sensor">
                     <Run>
-                        Texas Instruments CC2541 SensorTag
+                         CC2541 SensorTag
+                    </Run>
+                </Hyperlink> and
+
+                <Hyperlink NavigateUri="http://www.ti.com/tool/cc2650stk">
+                    <Run>
+                        CC2650 SensorTag
                     </Run>
                 </Hyperlink>
                 device.  If you have one of these devices please pair it with your phone

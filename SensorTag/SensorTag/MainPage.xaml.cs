@@ -34,13 +34,12 @@ namespace SensorTag
         DispatcherTimer _timer;
         SensorTag sensor;
         List<TileModel> tiles = new List<TileModel>();
+        bool registeredConnectionEvents;
 
         public MainPage()
         {
             this.InitializeComponent();
-            // get the BLE services that we can share across pages.
-            sensor = SensorTag.Instance;
-
+            
             Clear();
 
             tiles.Add(new TileModel() { Caption = "Accelerometer", Icon = new BitmapImage(new Uri("ms-appx:/Assets/Accelerometer.png")) });
@@ -51,15 +50,20 @@ namespace SensorTag
             tiles.Add(new TileModel() { Caption = "Barometer", Icon = new BitmapImage(new Uri("ms-appx:/Assets/Barometer.png")) });
             tiles.Add(new TileModel() { Caption = "Buttons", Icon = new BitmapImage(new Uri("ms-appx:/Assets/Buttons.png")) });
 
-            // these ones we always listen to.
-            sensor.ServiceError += OnServiceError;
-            sensor.StatusChanged += OnStatusChanged;
-            sensor.PropertyChanged += OnSensorPropertyChanged;
-            sensor.ConnectionChanged += OnConnectionChanged;
         }
         
         public async void RegisterEvents(bool register)
         {
+            // these ones we always listen to.
+            if (!registeredConnectionEvents)
+            {
+                registeredConnectionEvents = true;
+                sensor.ServiceError += OnServiceError;
+                sensor.StatusChanged += OnStatusChanged;
+                sensor.PropertyChanged += OnSensorPropertyChanged;
+                sensor.ConnectionChanged += OnConnectionChanged;
+            }
+
             if (register)
             {
                 await sensor.Barometer.StartReading();
@@ -280,16 +284,48 @@ namespace SensorTag
             }
         }
 
+        private async void OnRefresh(object sender, RoutedEventArgs e)
+        {
+            if (!connected && !connecting)
+            {
+                await this.ConnectSensors();
+            }
+        }
+
+        bool connecting;
+
         private async Task ConnectSensors()
         {
             try
             {
-                if (await sensor.Reconnect())
+                HideHelp();
+
+                if (sensor == null)
                 {
+                    // find a matching sensor
+                    // todo: let user choose which one to play with.
+                    foreach (SensorTag tag in await SensorTag.FindAllDevices())
+                    {
+                        sensor = tag;
+                        break;
+                    }
+                }
+
+                if (sensor == null)
+                {
+                    // no paired SensorTag, tell the user 
+                    DisplayMessage("Could not find a paired SensorTag device");
+                    ShowHelp();
+                    return;
+                }
+
+                connecting = true;
+                if (sensor.Connected || await sensor.ConnectAsync())
+                {
+                    connected = true;
                     RegisterEvents(true);
                     await sensor.Accelerometer.SetPeriod(1000); // save battery
                     SensorList.ItemsSource = tiles;
-                    HideHelp();
                 }
                 else
                 {
@@ -300,6 +336,7 @@ namespace SensorTag
             {
                 DisplayMessage(ex.Message);
             }
+            connecting = false;
         }
 
         private void ShowHelp()
@@ -405,7 +442,10 @@ namespace SensorTag
             {
                 // we are leaving the app, so disconnect the bluetooth services so other apps can use them.
                 active = false;
-                sensor.Disconnect();
+                if (sensor != null)
+                {
+                    sensor.Disconnect();
+                }
             }
         }
 

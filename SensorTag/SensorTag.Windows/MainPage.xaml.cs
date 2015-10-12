@@ -32,6 +32,7 @@ namespace SensorTag
     {
         DispatcherTimer _timer;
         SensorTag sensor;
+        bool registeredConnectionEvents;
         ObservableCollection<TileModel> tiles = new ObservableCollection<TileModel>();
 
         public MainPage()
@@ -39,17 +40,10 @@ namespace SensorTag
             this.InitializeComponent();
 
             // get the BLE services that we can share across pages.
-            sensor = SensorTag.Instance;
-
+            sensor = ((App)App.Current).SensorTag;
             Clear();
 
             SensorList.ItemsSource = tiles;
-
-            // these ones we always listen to.
-            sensor.ServiceError += OnServiceError;
-            sensor.StatusChanged += OnStatusChanged;
-            sensor.PropertyChanged += OnSensorPropertyChanged;
-            sensor.ConnectionChanged += OnConnectionChanged;
 
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         }
@@ -207,7 +201,7 @@ namespace SensorTag
             }
         }
 
-        public async Task RegisterButtons(bool register)
+        public void RegisterButtons(bool register)
         {
             try
             {
@@ -231,25 +225,23 @@ namespace SensorTag
 
         public async Task RegisterEvents(bool register)
         {
+            // these ones we always listen to.
+            if (!registeredConnectionEvents)
+            {
+                registeredConnectionEvents = true;
+                sensor.ServiceError += OnServiceError;
+                sensor.StatusChanged += OnStatusChanged;
+                sensor.ConnectionChanged += OnConnectionChanged;
+            }
+
             await RegisterBarometer(register);
             await RegisterAccelerometer(register);
             await RegisterGyroscope(register);
             await RegisterMagnetometer(register);
             await RegisterIRTemperature(register);
             await RegisterHumidity(register);
-            await RegisterButtons(register);
+            RegisterButtons(register);
 
-        }
-
-        void OnSensorPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            var nowait = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(() =>
-            {
-                if (e.PropertyName == "DeviceName")
-                {
-                    DeviceName.Text = sensor.DeviceName;
-                }
-            }));
         }
 
         void OnButtonValueChanged(object sender, SensorButtonEventArgs e)
@@ -421,12 +413,38 @@ namespace SensorTag
             try
             {
                 HideHelp();
+
+                if (sensor == null)
+                {
+                    // find a matching sensor
+                    // todo: let user choose which one to play with.
+                    foreach (SensorTag tag in await SensorTag.FindAllDevices())
+                    {
+                        sensor = tag;
+                        break;
+                    }
+                }
+
+                if (sensor == null)
+                {
+                    // no paired SensorTag, tell the user 
+                    DisplayMessage("Could not find a paired SensorTag device");
+                    ShowHelp();
+                    return;
+                }
+
+                // communicate the chosen sensor to the other pages.
+                ((App)App.Current).SensorTag = sensor;
+
+                DeviceName.Text = sensor.DeviceName;
+
                 connecting = true;
-                if (sensor.Connected || await sensor.Reconnect())
+                if (sensor.Connected || await sensor.ConnectAsync())
                 {
                     connected = true;
                     await RegisterEvents(true);
                     await sensor.Accelerometer.SetPeriod(1000); // save battery
+                    SensorList.ItemsSource = tiles;
                 }
                 else
                 {
@@ -436,7 +454,7 @@ namespace SensorTag
             } 
             catch (Exception ex)
             {
-                DisplayMessage("Connect failed, please ensure sensor is not in use on another machine");
+                DisplayMessage("Connect failed, please ensure sensor is not in use on another machine.  Details: " + ex.Message);
                 ShowHelp();
             }
             connecting = false;
@@ -546,7 +564,10 @@ namespace SensorTag
             {
                 // we are leaving the app, so disconnect the bluetooth services so other apps can use them.
                 active = false;
-                sensor.Disconnect();
+                if (sensor != null)
+                {
+                    sensor.Disconnect();
+                }
             }
         }
 

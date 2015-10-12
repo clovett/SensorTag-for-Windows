@@ -24,6 +24,11 @@ namespace SensorTag
         {
         }
 
+        /// <summary>
+        /// The version of the SensorTag device.  1=CC2541, 2=CC2650.
+        /// </summary>
+        public int Version { get; set; }
+
         static Guid HumidityServiceUuid = Guid.Parse("f000aa20-0451-4000-b000-000000000000");
         static Guid HumidityCharacteristicUuid = Guid.Parse("f000aa21-0451-4000-b000-000000000000");
         static Guid HumidityCharacteristicConfigUuid = Guid.Parse("f000aa22-0451-4000-b000-000000000000");
@@ -106,9 +111,9 @@ namespace SensorTag
             }
         }
 
-        public async Task<bool> ConnectAsync()
+        public async Task<bool> ConnectAsync(string deviceContainerId)
         {
-            return await this.ConnectAsync(HumidityServiceUuid, null);
+            return await this.ConnectAsync(HumidityServiceUuid, deviceContainerId);
         }
 
         protected override void OnCharacteristicValueChanged(GattCharacteristic sender, GattValueChangedEventArgs eventArgs)
@@ -139,7 +144,6 @@ namespace SensorTag
                 }
             }
         }
-
     }
 
 

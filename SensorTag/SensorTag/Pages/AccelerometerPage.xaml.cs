@@ -31,7 +31,7 @@ namespace SensorTag.Pages
         public AccelerometerPage()
         {
             this.InitializeComponent();
-            sensor = SensorTag.Instance;
+            sensor = ((App)App.Current).SensorTag;
         }
 
 

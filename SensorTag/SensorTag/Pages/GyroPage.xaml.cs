@@ -29,7 +29,7 @@ namespace SensorTag.Pages
         public GyroPage()
         {
             this.InitializeComponent();
-            sensor = SensorTag.Instance;
+            sensor = ((App)App.Current).SensorTag;
         }
 
 

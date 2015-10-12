@@ -32,7 +32,7 @@ namespace SensorTag.Pages
         {
             this.InitializeComponent();
 
-            sensor = SensorTag.Instance;
+            sensor = ((App)App.Current).SensorTag;
         }
 
         /// <summary>

@@ -25,6 +25,11 @@ namespace SensorTag
         {
         }
 
+        /// <summary>
+        /// The version of the SensorTag device.  1=CC2541, 2=CC2650.
+        /// </summary>
+        public int Version { get; set; }
+
         static Guid BarometerServiceUuid = Guid.Parse("f000aa40-0451-4000-b000-000000000000");
         static Guid BarometerCharacteristicUuid = Guid.Parse("f000aa41-0451-4000-b000-000000000000");
         static Guid BarometerCharacteristicConfigUuid = Guid.Parse("f000aa42-0451-4000-b000-000000000000");
@@ -148,9 +153,9 @@ namespace SensorTag
             }
         }
 
-        public async Task<bool> ConnectAsync()
+        public async Task<bool> ConnectAsync(string deviceContainerId)
         {
-            return await this.ConnectAsync(BarometerServiceUuid, null);
+            return await this.ConnectAsync(BarometerServiceUuid, deviceContainerId);
         }
 
         protected override void OnCharacteristicValueChanged(GattCharacteristic sender, GattValueChangedEventArgs eventArgs)

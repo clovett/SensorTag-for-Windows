@@ -21,6 +21,11 @@ namespace SensorTag
         {
         }
 
+        /// <summary>
+        /// The version of the SensorTag device.  1=CC2541, 2=CC2650.
+        /// </summary>
+        public int Version { get; set; }
+
         static Guid MagnetometerServiceUuid = Guid.Parse("f000aa30-0451-4000-b000-000000000000");
         static Guid MagnetometerCharacteristicUuid = Guid.Parse("f000aa31-0451-4000-b000-000000000000");
         static Guid MagnetometerCharacteristicConfigUuid = Guid.Parse("f000aa32-0451-4000-b000-000000000000");
@@ -129,9 +134,9 @@ namespace SensorTag
         }
 
 
-        public async Task<bool> ConnectAsync()
+        public async Task<bool> ConnectAsync(string deviceContainerId)
         {
-            return await this.ConnectAsync(MagnetometerServiceUuid, null);
+            return await this.ConnectAsync(MagnetometerServiceUuid, deviceContainerId);
         }
 
         protected override void OnCharacteristicValueChanged(GattCharacteristic sender, GattValueChangedEventArgs eventArgs)
@@ -164,7 +169,6 @@ namespace SensorTag
                 }
             }
         }
-
     }
 
 

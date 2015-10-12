@@ -47,7 +47,7 @@ namespace SensorTag.Pages
             }
             UnitCombo.SelectedIndex = (int)selectedUnit;
 
-            sensor = SensorTag.Instance;
+            sensor = ((App)App.Current).SensorTag;
         }
 
         /// <summary>

@@ -25,7 +25,7 @@ namespace SensorTag
     sealed partial class App : Application
     {
         Settings _settings;
-        SensorTag _sensor = new SensorTag();
+        SensorTag _sensor;
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -38,20 +38,21 @@ namespace SensorTag
         }
 
         /// <summary>
+        /// The selected SensorTag device
+        /// </summary>
+        public SensorTag SensorTag
+        {
+            get { return _sensor; }
+            set { _sensor = value; }
+        }
+
+        /// <summary>
         /// Invoked when the application is launched normally by the end user.  Other entry points
         /// will be used such as when the application is launched to open a specific file.
         /// </summary>
         /// <param name="e">Details about the launch request and process.</param>
         protected async override void OnLaunched(LaunchActivatedEventArgs e)
         {
-
-#if DEBUG
-            if (System.Diagnostics.Debugger.IsAttached)
-            {
-                this.DebugSettings.EnableFrameRateCounter = true;
-            }
-#endif
-
             _settings = await Settings.LoadAsync();
             if (_settings == null)
             {

@@ -14,15 +14,20 @@ namespace SensorTag
     public class BleIRTemperatureService : BleGenericGattService
     {
 
-        public BleIRTemperatureService() 
+        public BleIRTemperatureService()
         {
         }
 
-        static Guid IRTemperatureServiceUuid = Guid.Parse("f000aa00-0451-4000-b000-000000000000");
+        /// <summary>
+        /// The version of the SensorTag device.  1=CC2541, 2=CC2650.
+        /// </summary>
+        public int Version { get; set; }
+
+        public static Guid IRTemperatureServiceUuid = Guid.Parse("f000aa00-0451-4000-b000-000000000000");
         static Guid IRTemperatureCharacteristicUuid = Guid.Parse("f000aa01-0451-4000-b000-000000000000");
         static Guid IRTemperatureCharacteristicConfigUuid = Guid.Parse("f000aa02-0451-4000-b000-000000000000");
         static Guid IRTemperatureCharacteristicPeriodUuid = Guid.Parse("f000aa03-0451-4000-b000-000000000000");
-        
+
         Delegate _irTemperatureValueChanged;
 
         public event EventHandler<IRTemperatureMeasurementEventArgs> IRTemperatureMeasurementValueChanged
@@ -80,8 +85,8 @@ namespace SensorTag
 
             await WriteCharacteristicByte(IRTemperatureCharacteristicPeriodUuid, (byte)delay);
         }
-#endif 
-        
+#endif
+
         bool isReading;
 
         public async Task StartReading()
@@ -111,9 +116,9 @@ namespace SensorTag
         }
 
 
-        public async Task<bool> ConnectAsync()
+        public async Task<bool> ConnectAsync(string deviceContainerId)
         {
-            return await this.ConnectAsync(IRTemperatureServiceUuid, null);
+            return await this.ConnectAsync(IRTemperatureServiceUuid, deviceContainerId);
         }
 
         protected override void OnCharacteristicValueChanged(GattCharacteristic sender, GattValueChangedEventArgs eventArgs)
@@ -131,13 +136,46 @@ namespace SensorTag
                             reader.ReadBytes(data);
 
                             IRTemperatureMeasurement measurement = new IRTemperatureMeasurement();
-                            short objTemp = (short)(data[0] + (data[1] << 8));
+                            ushort objTemp = (ushort)(data[0] + (data[1] << 8));
                             ushort dieTemp = (ushort)(data[2] + (data[3] << 8));
 
-                            measurement.DieTemperature = dieTemp / 128.0;
+                            if (Version == 1)
+                            {
+                                measurement.DieTemperature = dieTemp / 128.0;
 
-                            measurement.SetTargetTemperature(objTemp);                            
+                                double Vobj2 = (double)objTemp;
 
+                                Vobj2 *= 0.00000015625;
+
+                                double Tdie = measurement.DieTemperature + 273.15;
+
+                                double S0 = 7E-14;	// Calibration factor: todo: this factor needs to be computed via calibration step.
+                                double a1 = 1.75E-3;
+                                double a2 = -1.678E-5;
+                                double b0 = -2.94E-5;
+                                double b1 = -5.7E-7;
+                                double b2 = 4.63E-9;
+                                double c2 = 13.4;
+                                double Tref = 298.15;
+                                double S = S0 * (1 + a1 * (Tdie - Tref) + a2 * Math.Pow((Tdie - Tref), 2));
+                                double Vos = b0 + b1 * (Tdie - Tref) + b2 * Math.Pow((Tdie - Tref), 2);
+                                double fObj = (Vobj2 - Vos) + c2 * Math.Pow((Vobj2 - Vos), 2);
+                                double tObj = Math.Pow(Math.Pow(Tdie, 4) + (fObj / S), .25);
+
+                                measurement.ObjectTemperature = (tObj - 273.15);
+                            }
+                            else
+                            {
+                                const double SCALE_LSB = 0.03125;
+                                int it;
+
+                                it = (int)((objTemp) >> 2);
+                                measurement.ObjectTemperature = (double)it * SCALE_LSB;
+
+                                it = (int)((dieTemp) >> 2);
+                                measurement.DieTemperature =  (double)it * SCALE_LSB;
+
+                            }
                             OnIRTemperatureMeasurementValueChanged(new IRTemperatureMeasurementEventArgs(measurement, eventArgs.Timestamp));
                         }
                     }
@@ -145,6 +183,10 @@ namespace SensorTag
             }
         }
 
+        internal double GetObjectTemperature(double dieDemp, short twoByteValue)
+        {
+
+        }
     }
 
 
@@ -170,29 +212,6 @@ namespace SensorTag
         }
 
 
-        internal void SetTargetTemperature(short twoByteValue)
-        {
-            double Vobj2 = (double)twoByteValue;
-
-            Vobj2 *= 0.00000015625;
-
-            double Tdie = DieTemperature + 273.15;
-
-            double S0 = 7E-14;	// Calibration factor: todo: this factor needs to be computed via calibration step.
-            double a1 = 1.75E-3;
-            double a2 = -1.678E-5;
-            double b0 = -2.94E-5;
-            double b1 = -5.7E-7;
-            double b2 = 4.63E-9;
-            double c2 = 13.4;
-            double Tref = 298.15;
-            double S = S0 * (1 + a1 * (Tdie - Tref) + a2 * Math.Pow((Tdie - Tref), 2));
-            double Vos = b0 + b1 * (Tdie - Tref) + b2 * Math.Pow((Tdie - Tref), 2);
-            double fObj = (Vobj2 - Vos) + c2 * Math.Pow((Vobj2 - Vos), 2);
-            double tObj = Math.Pow(Math.Pow(Tdie, 4) + (fObj / S), .25);
-
-            ObjectTemperature = (tObj - 273.15);
-        }
     }
 
     public class IRTemperatureMeasurementEventArgs : EventArgs
