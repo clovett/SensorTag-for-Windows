@@ -19,34 +19,45 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 
-// The User Control item template is documented at http://go.microsoft.com/fwlink/?LinkId=234236
+// The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
 namespace SensorTag.Pages
 {
-    public sealed partial class MainPanel : UserControl
+    /// <summary>
+    /// An empty page that can be used on its own or navigated to within a Frame.
+    /// </summary>
+    public sealed partial class DevicePage : Page
     {
         DispatcherTimer _timer;
         SensorTag sensor;
         bool registeredConnectionEvents;
         ObservableCollection<TileModel> tiles = new ObservableCollection<TileModel>();
 
-        public MainPanel()
+        public DevicePage()
         {
             this.InitializeComponent();
-            // get the BLE services that we can share across pages.
-            sensor = ((App)App.Current).SensorTag;
+
+            sensor = SensorTag.SelectedSensor;
             Clear();
 
             SensorList.ItemsSource = tiles;
-
-            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         }
 
-        async void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
+        protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
-            if (args.VirtualKey == Windows.System.VirtualKey.F5 && !connected && !connecting)
+            sensor = e.Parameter as SensorTag;
+            base.OnNavigatedTo(e);
+            await this.ConnectSensors();
+        }
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            base.OnNavigatedFrom(e);
+
+            active = false;
+            if (sensor != null && e.NavigationMode == NavigationMode.Back)
             {
-                await this.ConnectSensors();
+                sensor.Disconnect();
             }
         }
 
@@ -464,7 +475,7 @@ namespace SensorTag.Pages
             {
                 var m = e.Measurement;
 
-                var unit = Settings.Instance.PressureUnit;
+                var unit = (PressureUnit)Settings.Instance.PressureUnit;
 
                 string caption = Math.Round(m.GetUnit(unit), 3) + " " + pressureSuffixes[(int)unit];
 
@@ -507,29 +518,16 @@ namespace SensorTag.Pages
         {
             try
             {
-                HideHelp();
-
-                if (sensor == null)
-                {
-                    // find a matching sensor
-                    // todo: let user choose which one to play with.
-                    foreach (SensorTag tag in await SensorTag.FindAllDevices())
-                    {
-                        sensor = tag;
-                        break;
-                    }
-                }
-
                 if (sensor == null)
                 {
                     // no paired SensorTag, tell the user 
-                    DisplayMessage("Could not find a paired SensorTag device");
-                    ShowHelp();
+                    DisplayMessage("This page should be navigated to with a SensorTag parameter");
                     return;
                 }
-
-                // communicate the chosen sensor to the other pages.
-                ((App)App.Current).SensorTag = sensor;
+                if (connecting)
+                {
+                    return;
+                }
 
                 DeviceName.Text = sensor.DeviceName;
 
@@ -548,28 +546,14 @@ namespace SensorTag.Pages
                     }
                     SensorList.ItemsSource = tiles;
                 }
-                else
-                {
-                    ShowHelp();
-                }
 
             }
             catch (Exception ex)
             {
-                DisplayMessage("Connect failed, please ensure sensor is not in use on another machine.  Details: " + ex.Message);
-                ShowHelp();
+                DisplayMessage("Connect failed, please ensure sensor is on and is not in use on another machine.");
+                Debug.WriteLine(ex.Message);
             }
             connecting = false;
-        }
-
-        private void ShowHelp()
-        {
-            Help.Visibility = Windows.UI.Xaml.Visibility.Visible;
-        }
-
-        private void HideHelp()
-        {
-            Help.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
         }
 
         private void StartTimer()
@@ -611,14 +595,6 @@ namespace SensorTag.Pages
             {
                 ErrorMessage.Text = message;
             }));
-        }
-
-
-        public void Hide()
-        {
-            active = false;
-            // stay connected since page we are navigating to probably also wants to use the sensor.
-            //RegisterEvents(false);
         }
 
         bool active;
@@ -714,13 +690,6 @@ namespace SensorTag.Pages
             }
         }
 
-        private async void OnRefresh(object sender, RoutedEventArgs e)
-        {
-            if (!connected && !connecting)
-            {
-                await this.ConnectSensors();
-            }
-        }
 
         private void AddTile(TileModel model)
         {
@@ -736,6 +705,11 @@ namespace SensorTag.Pages
             {
                 tiles.Remove(tile);
             }
+        }
+
+        private void OnGoBack(object sender, RoutedEventArgs e)
+        {
+            Frame.GoBack();
         }
     }
 }

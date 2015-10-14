@@ -29,7 +29,7 @@ namespace SensorTag.Pages
         {
             this.InitializeComponent();
 
-            sensor = ((App)App.Current).SensorTag;
+            sensor = SensorTag.SelectedSensor;
         }
 
         /// <summary>

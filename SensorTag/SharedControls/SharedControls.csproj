@@ -47,6 +47,46 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Pages\AccelerometerPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\ButtonPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\DeviceList.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\DevicePage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\GyroPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\HumidityPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\IRTemperaturePage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\LightPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\MagnetometerPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\PressurePage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <TargetPlatform Include="WindowsPhoneApp, Version=8.1" />
@@ -56,12 +96,45 @@
     <Compile Include="Controls\CompassControl.xaml.cs">
       <DependentUpon>CompassControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\EmptyStringVisibilityConverter.cs" />
     <Compile Include="Controls\ScrollingGraph.xaml.cs">
       <DependentUpon>ScrollingGraph.xaml</DependentUpon>
     </Compile>
     <Compile Include="Helpers\AnimationHelper.cs" />
     <Compile Include="Helpers\ConversionExtensions.cs" />
+    <Compile Include="Helpers\IsolatedStorage.cs" />
     <Compile Include="Helpers\IWindowVisibilityWatcher.cs" />
+    <Compile Include="Helpers\Settings.cs" />
+    <Compile Include="Pages\AccelerometerPage.xaml.cs">
+      <DependentUpon>AccelerometerPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\ButtonPage.xaml.cs">
+      <DependentUpon>ButtonPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\DeviceList.xaml.cs">
+      <DependentUpon>DeviceList.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\DevicePage.xaml.cs">
+      <DependentUpon>DevicePage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\GyroPage.xaml.cs">
+      <DependentUpon>GyroPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\HumidityPage.xaml.cs">
+      <DependentUpon>HumidityPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\IRTemperaturePage.xaml.cs">
+      <DependentUpon>IRTemperaturePage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\LightPage.xaml.cs">
+      <DependentUpon>LightPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\MagnetometerPage.xaml.cs">
+      <DependentUpon>MagnetometerPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PressurePage.xaml.cs">
+      <DependentUpon>PressurePage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Controls\TileControl.xaml.cs">
       <DependentUpon>TileControl.xaml</DependentUpon>
@@ -69,6 +142,16 @@
     <Compile Include="Controls\TileModel.cs" />
     <Compile Include="Controls\TiltContentControl.cs" />
     <Compile Include="Helpers\XamlHelpers.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SensorTagLibrary\SensorTagLibrary.csproj">
+      <Project>{702df202-1cfe-456d-9df9-5e4e4daa02a4}</Project>
+      <Name>SensorTagLibrary</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\SensorTag.png" />
+    <Content Include="Assets\ti-sensortag-cc2650.png" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

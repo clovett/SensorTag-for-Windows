@@ -56,6 +56,22 @@ namespace SensorTag.Controls
             }
         }
 
+        private object userData;
+
+        public object UserData
+        {
+            get { return userData; }
+            set
+            {
+                if (userData != value)
+                {
+                    userData = value;
+                    OnPropertyChanged("UserData");
+                }
+            }
+        }
+
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         private void OnPropertyChanged(string name)

@@ -11,7 +11,7 @@ namespace SensorTag
     public class Settings : INotifyPropertyChanged
     {
         bool _celcius;
-        PressureUnit _pressureUnit;
+        int _pressureUnit;
 
         static Settings _instance;
 
@@ -45,7 +45,7 @@ namespace SensorTag
             }
         }
 
-        public PressureUnit PressureUnit
+        public int PressureUnit
         {
             get { return _pressureUnit; }
             set

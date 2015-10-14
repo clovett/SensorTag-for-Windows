@@ -9,6 +9,6 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <p:MainPanel x:Name="SensorTagPanel"/>
+        <p:DeviceList x:Name="SensorTagPanel"/>
     </Grid>
 </Page>

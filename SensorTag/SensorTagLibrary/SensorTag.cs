@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -35,6 +36,7 @@ namespace SensorTag
         bool disconnecting;
         BleGattDeviceInfo deviceInfo;
         int version;
+        static SensorTag _selected;
 
         public int Version { get { return this.version; } }
 
@@ -42,11 +44,20 @@ namespace SensorTag
         {
             this.deviceInfo = deviceInfo;
             this.version = 1;
-            if (deviceInfo.DeviceInformation.Name == "CC2650 SensorTag")
+            string name = deviceInfo.DeviceInformation.Name;
+            Debug.WriteLine("Found sensor tag: [{0}]", name);
+            if (name == "CC2650 SensorTag" || name == "SensorTag 2.0")
             {
                 this.version = 2;
             }
         }
+
+        /// <summary>
+        /// Get or set the selected SensorTag instance.
+        /// </summary>
+        public static SensorTag SelectedSensor { get { return _selected; } set { _selected = value; } }
+
+
         private SensorTag()
         {
             throw new InvalidOperationException();
@@ -63,7 +74,8 @@ namespace SensorTag
             List<SensorTag> result = new List<SensorTag>();
             foreach (var device in await BleGenericGattService.FindMatchingDevices(BleIRTemperatureService.IRTemperatureServiceUuid))
             {
-                if (device.DeviceInformation.Name.Contains("SensorTag"))
+                string name = "" + device.DeviceInformation.Name;
+                if (name.Contains("SensorTag") || name.Contains("Sensor Tag"))
                 {
                     result.Add(new SensorTag(device));
                 }

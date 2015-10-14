@@ -21,20 +21,15 @@ namespace SensorTag.Pages
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class TemperaturePage : Page, IWindowVisibilityWatcher
+    public sealed partial class LightPage : Page, IWindowVisibilityWatcher
     {
         SensorTag sensor;
         DispatcherTimer _timer;
-        bool celcius;
 
-        public TemperaturePage()
+        public LightPage()
         {
             this.InitializeComponent();
-
-            sensor = ((App)App.Current).SensorTag;
-            celcius = Settings.Instance.Celcius;
-            CelciusButton.IsChecked = celcius;
-            FahrenheitButton.IsChecked = !celcius;
+            sensor = SensorTag.SelectedSensor;
         }
 
         /// <summary>
@@ -47,16 +42,16 @@ namespace SensorTag.Pages
             ShowMessage("Connecting...");
             try
             {
-                await sensor.Humidity.StartReading();
-                sensor.IRTemperature.IRTemperatureMeasurementValueChanged += IRTemperature_IRTemperatureMeasurementValueChanged;
+                await sensor.LightIntensity.StartReading();
+                sensor.LightIntensity.LightMeasurementValueChanged += OnLightMeasurementValueChanged;
                 ShowMessage("");
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 ShowMessage(ex.Message);
             }
 
         }
-
 
         private void ShowMessage(string msg)
         {
@@ -68,14 +63,14 @@ namespace SensorTag.Pages
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            sensor.IRTemperature.IRTemperatureMeasurementValueChanged -= IRTemperature_IRTemperatureMeasurementValueChanged;
-            //var nowait = sensor.Barometer.StopReading();
+            sensor.LightIntensity.LightMeasurementValueChanged -= OnLightMeasurementValueChanged;
+            //sensor.Barometer.StopReading();
             base.OnNavigatedFrom(e);
         }
 
-        IRTemperatureMeasurement measurement;
+        LightIntensityMeasurement measurement;
 
-        void IRTemperature_IRTemperatureMeasurementValueChanged(object sender, IRTemperatureMeasurementEventArgs e)
+        void OnLightMeasurementValueChanged(object sender, LightIntensityMeasurementEventArgs e)
         {
             measurement = e.Measurement;
 
@@ -102,39 +97,25 @@ namespace SensorTag.Pages
         {
             if (visible)
             {
-                sensor.IRTemperature.IRTemperatureMeasurementValueChanged += IRTemperature_IRTemperatureMeasurementValueChanged;
-                var nowait = sensor.Humidity.StartReading();
+                sensor.LightIntensity.LightMeasurementValueChanged += OnLightMeasurementValueChanged;
+                sensor.LightIntensity.StartReading();
             }
             else
             {
-                sensor.IRTemperature.IRTemperatureMeasurementValueChanged -= IRTemperature_IRTemperatureMeasurementValueChanged;
-                var nowait = sensor.Humidity.StopReading();
+                sensor.LightIntensity.LightMeasurementValueChanged -= OnLightMeasurementValueChanged;
+                sensor.LightIntensity.StopReading();
             }
         }
+
         private void StartTimer()
         {
             if (_timer == null)
             {
                 _timer = new DispatcherTimer();
-                _timer.Interval = TimeSpan.FromMilliseconds(100);
+                _timer.Interval = TimeSpan.FromMilliseconds(30);
                 _timer.Tick += OnTimerTick;
                 _timer.Start();
             }
-        }
-
-        double Fahrenheit(double celcius)
-        {
-            return celcius * 1.8 + 32.0;
-        }
-
-
-        string FormatTemperature(double t)
-        {
-            if (!celcius)
-            {
-                t = Fahrenheit(t);
-            }
-            return t.ToString("N2");
         }
 
         bool animating;
@@ -143,17 +124,14 @@ namespace SensorTag.Pages
         {
             if (measurement != null)
             {
-                IRTempText.Text = FormatTemperature(measurement.ObjectTemperature);
-                DieTempText.Text = FormatTemperature(measurement.DieTemperature);
+                LightText.Text = ((int)measurement.Lux).ToString();
 
                 if (!animating)
                 {
                     animating = true;
-                    IRTempGraph.Start();
-                    TemperatureGraph.Start();
+                    LightGraph.Start();
                 }
-                IRTempGraph.SetCurrentValue(measurement.ObjectTemperature);
-                TemperatureGraph.SetCurrentValue(measurement.DieTemperature);
+                LightGraph.SetCurrentValue(measurement.Lux);
             }
         }
 
@@ -165,22 +143,6 @@ namespace SensorTag.Pages
                 _timer.Stop();
                 _timer = null;
             }
-        }
-
-        private async void OnCelciusClick(object sender, RoutedEventArgs e)
-        {
-            celcius = true;
-            FahrenheitButton.IsChecked = false;
-            Settings.Instance.Celcius = true;
-            await Settings.Instance.SaveAsync();            
-        }
-
-        private async void OnFahrenheitClick(object sender, RoutedEventArgs e)
-        {
-            celcius = false;
-            CelciusButton.IsChecked = false;
-            Settings.Instance.Celcius = false;
-            await Settings.Instance.SaveAsync();
         }
     }
 }

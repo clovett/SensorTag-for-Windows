@@ -1,0 +1,53 @@
+﻿<Page
+    x:Class="SensorTag.Pages.DevicePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:SensorTag.Pages"
+    xmlns:p="using:SensorTag.Pages"
+    xmlns:c="using:SensorTag.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid x:Name="TitleGrid" Background="{StaticResource PageTitleBackgroundColor}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button x:Name="backButton" Click="OnGoBack"
+                        Style="{StaticResource BackButtonStyle}"
+                         Margin="10,6,10,0"  
+                        />
+
+            <TextBlock x:Name="DeviceName" Text="SensorTag" FontSize="36" Margin="10,10,10,0" Grid.Column="1"/>
+            
+        </Grid>
+
+
+        <ListView x:Name="SensorList"  Grid.Row="1" SelectionMode="None"
+                  IsItemClickEnabled="True" ItemClick="OnItemClick">
+            <ListView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapGrid Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+            </ListView.ItemsPanel>
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <c:TileControl Margin="10"
+                                   />
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <TextBlock x:Name="ErrorMessage" Text="" FontSize="24" Margin="10" Grid.Row="2" TextWrapping="Wrap" Foreground="Salmon"/>
+
+    </Grid>
+</Page>

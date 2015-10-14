@@ -9,14 +9,17 @@
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400">
-
+    <UserControl.Resources>
+        <c:EmptyStringVisibilityConverter x:Key="EmptyStringVisibilityConverter"/>
+    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Image Source="{Binding Icon}" Width="120" Height="120"/>
-        <Border Background="#80FFFFFF" CornerRadius="2" HorizontalAlignment="Left" VerticalAlignment="Bottom" Padding="3">
+        <Border x:Name="SensorBorder" Background="#80FFFFFF" CornerRadius="2" HorizontalAlignment="Left" VerticalAlignment="Bottom" Padding="3"
+                Visibility="{Binding SensorValue, Converter={StaticResource EmptyStringVisibilityConverter}}">
             <TextBlock Text="{Binding SensorValue}" FontSize="12" Foreground="Black"/>
         </Border>
         <TextBlock Text="{Binding Caption}" Grid.Row="1" HorizontalAlignment="Center" FontSize="16" Foreground="{StaticResource PhoneAccentBrush}"/>

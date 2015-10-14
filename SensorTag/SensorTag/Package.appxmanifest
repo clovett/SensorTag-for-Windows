@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/2010/manifest" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest">
-  <Identity Name="43906ChrisLovett.SensorTag" Publisher="CN=BC801FCC-0BF8-49D7-9F51-1B625C3BE476" Version="1.2.0.3" />
+  <Identity Name="43906ChrisLovett.SensorTag" Publisher="CN=BC801FCC-0BF8-49D7-9F51-1B625C3BE476" Version="1.2.0.4" />
   <mp:PhoneIdentity PhoneProductId="c3d02862-8af1-4227-9dc4-ef457eed8cab" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>SensorTag</DisplayName>
@@ -16,7 +16,7 @@
   </Resources>
   <Applications>
     <Application Id="xAA7D614ByD073y43DFy95A7yC4414ABB798Fx" Executable="$targetnametoken$.exe" EntryPoint="SensorTag.App">
-      <m3:VisualElements DisplayName="SensorTag" Description="Simple app demonstrating the Texas Instruments CC2541 SensorTag device." BackgroundColor="#464646" ForegroundText="light" Square150x150Logo="Assets\Logo.png" Square44x44Logo="Assets\SmallLogo.png" xmlns:m3="http://schemas.microsoft.com/appx/2014/manifest">
+      <m3:VisualElements DisplayName="SensorTag" Description="Simple app demonstrating the Texas Instruments CC2541 SensorTag device." BackgroundColor="#000000" ForegroundText="light" Square150x150Logo="Assets\Logo.png" Square44x44Logo="Assets\SmallLogo.png" xmlns:m3="http://schemas.microsoft.com/appx/2014/manifest">
         <m3:DefaultTile Wide310x150Logo="Assets\WideLogo.png" Square71x71Logo="Assets\Logo71.png">
         </m3:DefaultTile>
         <m3:InitialRotationPreference>

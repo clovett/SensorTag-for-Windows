@@ -24,12 +24,13 @@ namespace SensorTag.Pages
     public sealed partial class GyroPage : Page
     {
         SensorTag sensor;
-        DispatcherTimer _timer;
+        DispatcherTimer timer;
+        bool animating;
 
         public GyroPage()
         {
             this.InitializeComponent();
-            sensor = ((App)App.Current).SensorTag;
+            sensor = SensorTag.SelectedSensor;
         }
 
 
@@ -110,32 +111,33 @@ namespace SensorTag.Pages
         double speedX;
         double speedY;
         double speedZ;
-
+        GyroscopeMeasurement measurement;
 
         void Gyroscope_GyroscopeMeasurementValueChanged(object sender, GyroscopeMeasurementEventArgs e)
         {
             //Debug.WriteLine("{0},{1},{2}", e.Measurement.X, e.Measurement.Y, e.Measurement.Z);
 
-            var m = e.Measurement;   
+            this.measurement = e.Measurement;   
+
             // magnetometer has quite a bit of noise, if the value is less than 5 then chances are the
             // device is not moving.
-            if (Math.Abs(m.X) > MinimumMovement)
+            if (Math.Abs(measurement.X) > MinimumMovement)
             {
-                rx += m.X;
-                speedX = 1d + Math.Min(3, Math.Abs(m.X / 10));
+                rx += measurement.X;
+                speedX = 1d + Math.Min(3, Math.Abs(measurement.X / 10));
             }
-            if (Math.Abs(m.Y) > MinimumMovement)
+            if (Math.Abs(measurement.Y) > MinimumMovement)
             {
-                ry += m.Y;
-                speedY = 1d + Math.Min(3, Math.Abs(m.Y / 10));
+                ry += measurement.Y;
+                speedY = 1d + Math.Min(3, Math.Abs(measurement.Y / 10));
             }
-            if (Math.Abs(m.Z) > MinimumMovement)
+            if (Math.Abs(measurement.Z) > MinimumMovement)
             {
-                rz += m.Z;
-                speedZ = 1d + Math.Min(3, Math.Abs(m.Z / 10));
+                rz += measurement.Z;
+                speedZ = 1d + Math.Min(3, Math.Abs(measurement.Z / 10));
             }
 
-            if (_timer == null)
+            if (timer == null)
             {
                 var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
                 {
@@ -144,28 +146,38 @@ namespace SensorTag.Pages
             }
         }
 
+        MovementMeasurement movement;
+
         void OnMovementMeasurementValueChanged(object sender, MovementEventArgs e)
         {
-            var m = e.Measurement;
+            this.movement = e.Measurement;
+
+            this.absolutePosition = new MagnetometerMeasurement()
+            {
+                X = movement.MagX,
+                Y = movement.MagY,
+                Z = movement.MagZ
+            };
 
             // magnetometer has quite a bit of noise, if the value is less than 5 then chances are the
             // device is not moving.
-            if (Math.Abs(m.MagX) > MinimumMovement)
+            if (Math.Abs(movement.GyroX) > MinimumMovement)
             {
-                rx += m.MagX;
-                speedX = 1d + Math.Min(3, Math.Abs(m.MagX / 10));
+                rx += movement.MagX;
+                speedX = 1d + Math.Min(3, Math.Abs(movement.MagX / 10));
             }
-            if (Math.Abs(m.MagY) > MinimumMovement)
+            if (Math.Abs(movement.GyroY) > MinimumMovement)
             {
-                ry += m.MagY;
-                speedY = 1d + Math.Min(3, Math.Abs(m.MagY / 10));
+                ry += movement.MagY;
+                speedY = 1d + Math.Min(3, Math.Abs(movement.MagY / 10));
             }
-            if (Math.Abs(m.MagZ) > MinimumMovement)
+            if (Math.Abs(movement.GyroZ) > MinimumMovement)
             {
-                rz += m.MagZ;
-                speedZ = 1d + Math.Min(3, Math.Abs(m.MagZ / 10));
+                rz += movement.MagZ;
+                speedZ = 1d + Math.Min(3, Math.Abs(movement.MagZ / 10));
             }
-            if (_timer == null)
+
+            if (timer == null)
             {
                 var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
                 {
@@ -182,22 +194,22 @@ namespace SensorTag.Pages
 
         private void StartTimer()
         {
-            if (_timer == null)
+            if (timer == null)
             {
-                _timer = new DispatcherTimer();
-                _timer.Interval = TimeSpan.FromMilliseconds(30);
-                _timer.Tick += OnTimerTick;
-                _timer.Start();
+                timer = new DispatcherTimer();
+                timer.Interval = TimeSpan.FromMilliseconds(30);
+                timer.Tick += OnTimerTick;
+                timer.Start();
             }
         }
 
         private void StopTimer()
         {
-            if (_timer != null)
+            if (timer != null)
             {
-                _timer.Tick -= OnTimerTick;
-                _timer.Stop();
-                _timer = null;
+                timer.Tick -= OnTimerTick;
+                timer.Stop();
+                timer = null;
             }
         }
 
@@ -238,10 +250,67 @@ namespace SensorTag.Pages
                     BorderProjection.RotationZ -= speedZ;
                     rz += speedZ;
                 }
+
+                double x = 0;
+                double y = 0;
+                double z = 0;
+
+                if (measurement != null)
+                {
+                    x = measurement.X;
+                    y = measurement.Y;
+                    z = measurement.Z;
+                }
+                else if (movement != null)
+                {
+                    x = movement.GyroX;
+                    y = movement.GyroY;
+                    z = movement.GyroZ;
+                }
+                if (!animating)
+                {
+                    animating = true;
+                    XAxis.Start();
+                    YAxis.Start();
+                    ZAxis.Start();
+                }
+                XAxis.SetCurrentValue(ClampX(x));
+                YAxis.SetCurrentValue(ClampY(y));
+                ZAxis.SetCurrentValue(ClampZ(z));
             }
             catch (Exception)
             {
             }
+        }
+
+        double maxX = 0;
+        double ClampX(double x)
+        {
+            if (Math.Abs(x) > maxX)
+            {
+                maxX = Math.Abs(x);
+            }
+            return x / maxX;
+        }
+
+        double maxY = 0;
+        double ClampY(double y)
+        {
+            if (Math.Abs(y) > maxY)
+            {
+                maxY = Math.Abs(y);
+            }
+            return y / maxY;
+        }
+
+        double maxZ = 0;
+        double ClampZ(double z)
+        {
+            if (Math.Abs(z) > maxZ)
+            {
+                maxZ = Math.Abs(z);
+            }
+            return z / maxZ;
         }
 
         public async void OnVisibilityChanged(bool visible)
