@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/2010/manifest" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest">
-  <Identity Name="43906ChrisLovett.SensorTag" Publisher="CN=BC801FCC-0BF8-49D7-9F51-1B625C3BE476" Version="1.2.0.4" />
+  <Identity Name="43906ChrisLovett.SensorTag" Publisher="CN=BC801FCC-0BF8-49D7-9F51-1B625C3BE476" Version="1.2.0.5" />
   <mp:PhoneIdentity PhoneProductId="c3d02862-8af1-4227-9dc4-ef457eed8cab" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>SensorTag</DisplayName>
@@ -23,7 +23,7 @@
           <m3:Rotation Preference="portrait" />
           <m3:Rotation Preference="portraitFlipped" />
         </m3:InitialRotationPreference>
-        <m3:SplashScreen Image="Assets\SplashScreen.png" />
+        <m3:SplashScreen Image="Assets\SplashScreen.png" BackgroundColor="#000000" />
       </m3:VisualElements>
     </Application>
   </Applications>

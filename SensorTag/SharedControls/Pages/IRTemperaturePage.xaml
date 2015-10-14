@@ -22,6 +22,8 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <Grid x:Name="TitleGrid" Background="{StaticResource PageTitleBackgroundColor}">
@@ -85,9 +87,8 @@
 
         <TextBlock x:Name="Message" Grid.Row="4" Margin="3" Foreground="Salmon"
                    TextWrapping="Wrap"/>
-    </Grid>
-    <Page.BottomAppBar>
-        <CommandBar>
+
+        <StackPanel Grid.Row="6" HorizontalAlignment="Center" Orientation="Horizontal">
             <AppBarToggleButton x:Name="CelciusButton" Click="OnCelciusClick">
                 <AppBarToggleButton.Icon>
                     <FontIcon Glyph="C"/>
@@ -98,6 +99,6 @@
                     <FontIcon Glyph="F"/>
                 </AppBarToggleButton.Icon>
             </AppBarToggleButton>
-        </CommandBar>
-    </Page.BottomAppBar>
+        </StackPanel>
+    </Grid>
 </Page>

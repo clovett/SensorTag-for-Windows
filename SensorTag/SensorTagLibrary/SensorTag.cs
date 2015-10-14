@@ -36,6 +36,7 @@ namespace SensorTag
         bool disconnecting;
         BleGattDeviceInfo deviceInfo;
         int version;
+        string deviceName;
         static SensorTag _selected;
 
         public int Version { get { return this.version; } }
@@ -49,6 +50,11 @@ namespace SensorTag
             if (name == "CC2650 SensorTag" || name == "SensorTag 2.0")
             {
                 this.version = 2;
+                this.deviceName = "CC2650";
+            }
+            else
+            {
+                this.deviceName = "CC2541";
             }
         }
 
@@ -61,6 +67,16 @@ namespace SensorTag
         private SensorTag()
         {
             throw new InvalidOperationException();
+        }
+
+        public string DeviceAddress
+        {
+            get { return deviceInfo.Address.ToString("x"); }
+        }
+
+        public string DeviceName
+        {
+            get { return this.deviceName; }
         }
 
         public bool Connected { get { return connected; } }
@@ -84,11 +100,6 @@ namespace SensorTag
         }
 
 
-        public string DeviceName
-        {
-            get { return deviceInfo.DeviceInformation.Name; }
-        }
-
         public BleAccelerometerService Accelerometer { get { return _accelService; } }
         public BleGyroscopeService Gyroscope { get { return _gyroService; } }
         public BleMagnetometerService Magnetometer { get { return _magService; } }
@@ -100,6 +111,7 @@ namespace SensorTag
         // Version 2 sensors.
         public BleMovementService Movement { get { return _motionService; } }
         public BleLightIntensityService LightIntensity { get { return _lightService; } }
+
 
         public event EventHandler<string> StatusChanged;
 

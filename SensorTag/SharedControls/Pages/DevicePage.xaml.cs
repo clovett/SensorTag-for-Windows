@@ -37,17 +37,40 @@ namespace SensorTag.Pages
         {
             this.InitializeComponent();
 
-            sensor = SensorTag.SelectedSensor;
             Clear();
 
-            SensorList.ItemsSource = tiles;
+        }
+
+        private async void OnLabelChanged(object sender, EventArgs e)
+        {
+            string newName = DeviceName.Label;
+            Settings.Instance.SetName(sensor.DeviceAddress, newName);
+            await Settings.Instance.SaveAsync();
+            SetDeviceName();
         }
 
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
             sensor = e.Parameter as SensorTag;
+
+            SensorList.ItemsSource = tiles;
+            SetDeviceName();
+
             base.OnNavigatedTo(e);
             await this.ConnectSensors();
+        }
+
+        private void SetDeviceName()
+        {
+            string name = Settings.Instance.FindName(sensor.DeviceAddress);
+            if (string.IsNullOrEmpty(name))
+            {
+                name = sensor.DeviceName;
+            }
+
+            DeviceName.LabelChanged -= OnLabelChanged;
+            DeviceName.Label = name;
+            DeviceName.LabelChanged += OnLabelChanged;
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -528,9 +551,6 @@ namespace SensorTag.Pages
                 {
                     return;
                 }
-
-                DeviceName.Text = sensor.DeviceName;
-
                 connecting = true;
                 if (sensor.Connected || await sensor.ConnectAsync())
                 {

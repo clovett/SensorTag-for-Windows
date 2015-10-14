@@ -27,7 +27,7 @@
                          Margin="10,6,10,0"  
                         />
 
-            <TextBlock x:Name="DeviceName" Text="SensorTag" FontSize="36" Margin="10,10,10,0" Grid.Column="1"/>
+            <c:EditableTextBlock x:Name="DeviceName" Label="SensorTag" FontSize="36" Margin="10,10,10,0" Grid.Column="1" />
             
         </Grid>
 

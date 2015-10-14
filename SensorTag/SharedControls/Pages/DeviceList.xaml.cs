@@ -73,8 +73,14 @@ namespace SensorTag.Pages
                 foreach (SensorTag tag in await SensorTag.FindAllDevices())
                 {
                     string icon = tag.Version == 1 ? "ms-appx:/Assets/SensorTag.png" : "ms-appx:/Assets/ti-sensortag-cc2650.png";
-                    string caption = tag.Version == 1 ? "CC2541" : "CC2650";
-                    tiles.Add(new TileModel() { Caption = caption, Icon = new BitmapImage(new Uri(icon)), UserData = tag });
+                    
+                    string name = Settings.Instance.FindName(tag.DeviceAddress);
+                    if (string.IsNullOrEmpty(name))
+                    {
+                        name = tag.DeviceName;
+                    }
+
+                    tiles.Add(new TileModel() { Caption = name, Icon = new BitmapImage(new Uri(icon)), UserData = tag });
                 }
 
                 if (tiles.Count == 0)

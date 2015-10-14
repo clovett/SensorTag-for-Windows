@@ -39,6 +39,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Controls\EditableTextBlock.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Controls\ScrollingGraph.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -95,6 +99,9 @@
   <ItemGroup>
     <Compile Include="Controls\CompassControl.xaml.cs">
       <DependentUpon>CompassControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\EditableTextBlock.xaml.cs">
+        <DependentUpon>EditableTextBlock.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\EmptyStringVisibilityConverter.cs" />
     <Compile Include="Controls\ScrollingGraph.xaml.cs">

@@ -1,0 +1,29 @@
+﻿<UserControl
+    x:Class="SensorTag.Controls.EditableTextBlock"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:SensorTag.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    d:DesignHeight="60"
+    d:DesignWidth="400">
+    
+    <Grid>
+
+        <Border Padding="5,8,5,2" Background="Transparent" VerticalAlignment="Top"
+                PointerPressed="OnBorderPointerPressed">
+            <TextBlock x:Name="LabelTextBlock" Text=""  FontSize="24"
+                       FontWeight="Light" 
+                       />
+        </Border>
+
+        <TextBox x:Name="LabelEditBox" Text="" FontSize="24"
+                       FontWeight="Light" Margin="0"
+                       LostFocus="PageTitleEditBox_LostFocus"
+                       KeyDown="PageTitleEditBox_KeyDown"
+                       Visibility="Collapsed"
+                       Padding="4,1" />
+
+    </Grid>
+</UserControl>
