@@ -15,18 +15,28 @@ namespace SensorTag
     /// </summary>
     public class SensorTag : INotifyPropertyChanged
     {
-        BleIRTemperatureService _tempService;
+        BleIRTemperatureService _tempService;   
+        BleHumidityService _humidityService;
+        BleBarometerService _barometerService;
+
+        // Version 1 only
         BleButtonService _buttonService;
         BleAccelerometerService _accelService;
         BleGyroscopeService _gyroService;
         BleMagnetometerService _magService;
-        BleHumidityService _humidityService;
-        BleBarometerService _barometerService;
+
+        // Version 2 only.
+        BleMovementService _motionService;
+        BleLightIntensityService _lightService;
+
+        // variables
         bool connected;
         bool connecting;
         bool disconnecting;
         BleGattDeviceInfo deviceInfo;
         int version;
+
+        public int Version { get { return this.version; } }
 
         private SensorTag(BleGattDeviceInfo deviceInfo)
         {
@@ -75,6 +85,9 @@ namespace SensorTag
         public BleHumidityService Humidity { get { return _humidityService; } }
         public BleBarometerService Barometer { get { return _barometerService; } }
 
+        // Version 2 sensors.
+        public BleMovementService Movement { get { return _motionService; } }
+        public BleLightIntensityService LightIntensity { get { return _lightService; } }
 
         public event EventHandler<string> StatusChanged;
 
@@ -106,18 +119,34 @@ namespace SensorTag
                     {
                         return false;
                     };
-                    await ConnectButtonService();
-                    if (disconnecting) return false;
-                    await ConnectAccelerometerService();
-                    if (disconnecting) return false;
-                    await ConnectGyroscopeService();
-                    if (disconnecting) return false;
-                    await ConnectMagnetometerService();
-                    if (disconnecting) return false;
+                    
                     await ConnectHumidityService();
                     if (disconnecting) return false;
                     await ConnectBarometerService();
                     if (disconnecting) return false;
+
+                    // Version 1 only
+                    if (version == 1)
+                    {
+                        await ConnectButtonService();
+                        if (disconnecting) return false;
+                        await ConnectAccelerometerService();
+                        if (disconnecting) return false;
+                        await ConnectGyroscopeService();
+                        if (disconnecting) return false;
+                        await ConnectMagnetometerService();
+                        if (disconnecting) return false;
+                    }
+
+                    if (version == 2)
+                    {
+                        await ConnectMovementService();
+                        if (disconnecting) return false;
+                        await ConnectLightIntensityService();
+                        if (disconnecting) return false;
+                    }
+
+
                     connected = true;
                     OnStatusChanged("connected");
                 }
@@ -230,6 +259,38 @@ namespace SensorTag
                     _barometerService = null;
                 }
             }
+
+
+            if (_motionService != null)
+            {
+                using (_motionService)
+                {
+                    try
+                    {
+                        _motionService.Error -= OnServiceError;
+                        _motionService.ConnectionChanged -= OnConnectionChanged;
+                        await _motionService.StopReading();
+                    }
+                    catch { }
+                    _motionService = null;
+                }
+            }
+
+            if (_lightService != null)
+            {
+                using (_lightService)
+                {
+                    try
+                    {
+                        _lightService.Error -= OnServiceError;
+                        _lightService.ConnectionChanged -= OnConnectionChanged;
+                        await _lightService.StopReading();
+                    }
+                    catch { }
+                    _lightService = null;
+                }
+            }
+
         }
 
         private async Task<bool> ConnectIRTemperatureService()
@@ -246,6 +307,46 @@ namespace SensorTag
                 }
                 _tempService.Error -= OnServiceError;
                 _tempService = null;
+                return false;
+            }
+            return true;
+        }
+
+
+        private async Task<bool> ConnectMovementService()
+        {
+            if (_motionService == null)
+            {
+                _motionService = new BleMovementService() { Version = this.version };
+                _motionService.Error += OnServiceError;
+
+                if (await _motionService.ConnectAsync(deviceInfo.ContainerId))
+                {
+                    _motionService.ConnectionChanged += OnConnectionChanged;
+                    return true;
+                }
+                _motionService.Error -= OnServiceError;
+                _motionService = null;
+                return false;
+            }
+            return true;
+        }
+
+
+        private async Task<bool> ConnectLightIntensityService()
+        {
+            if (_lightService == null)
+            {
+                _lightService = new BleLightIntensityService() { Version = this.version };
+                _lightService.Error += OnServiceError;
+
+                if (await _lightService.ConnectAsync(deviceInfo.ContainerId))
+                {
+                    _lightService.ConnectionChanged += OnConnectionChanged;
+                    return true;
+                }
+                _lightService.Error -= OnServiceError;
+                _lightService = null;
                 return false;
             }
             return true;
@@ -308,7 +409,6 @@ namespace SensorTag
             }
             return true;
         }
-
 
         private async Task<bool> ConnectMagnetometerService()
         {

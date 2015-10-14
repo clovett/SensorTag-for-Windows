@@ -3,68 +3,12 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:SensorTag.Windows"
-    xmlns:c="using:SensorTag.Controls"
+    xmlns:p="using:SensorTag.Pages"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-
-        <Grid Background="{StaticResource PageTitleBackgroundColor}">
-            <TextBlock x:Name="DeviceName" Text="SensorTag" FontSize="36" Margin="10" />
-        </Grid>
-
-        <ListView x:Name="SensorList"  Grid.Row="1" SelectionMode="None"
-                  IsItemClickEnabled="True" ItemClick="OnItemClick">
-            <ListView.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <WrapGrid Orientation="Horizontal"/>
-                </ItemsPanelTemplate>
-            </ListView.ItemsPanel>
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <c:TileControl Margin="10"
-                                   />
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
-
-        <TextBlock x:Name="ErrorMessage" Text="" FontSize="24" Margin="10" Grid.Row="2" TextWrapping="Wrap" Foreground="Salmon"/>
-
-        <RichTextBlock x:Name="Help" Grid.Row="1" Margin="10" FontSize="18"  Visibility="Collapsed">
-            <Paragraph>
-                This app is designed to work with the Texas Instruments
-                <Hyperlink NavigateUri="http://www.ti.com/tool/cc2541dk-sensor">
-                    <Run>
-                         CC2541 SensorTag
-                    </Run>
-                </Hyperlink> and
-
-                <Hyperlink NavigateUri="http://www.ti.com/tool/cc2650stk">
-                    <Run>
-                        CC2650 SensorTag
-                    </Run>
-                </Hyperlink>
-                device.  If you have one of these devices please pair it with your phone
-                using the
-                <Hyperlink NavigateUri="ms-settings-bluetooth:">
-                    <Run >
-                        Bluetooth Settings
-                    </Run>
-                </Hyperlink>
-                page.  Note: use passcode 0000 if prompted.
-            </Paragraph>
-            <Paragraph>
-                <InlineUIContainer>
-                    <Button Margin="0,5,0,0" x:Name="RefreshButton" Click="OnRefresh">Refresh</Button>
-                </InlineUIContainer>
-            </Paragraph>
-        </RichTextBlock>
+        <p:MainPanel x:Name="SensorTagPanel"/>
     </Grid>
 </Page>

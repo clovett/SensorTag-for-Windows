@@ -541,7 +541,8 @@ namespace SensorTag
             }
         }
 
-        public async Task WriteCharacteristicBytes(Guid characteristicGuid, byte[] value)
+
+        public async Task WriteCharacteristicBytes(Guid characteristicGuid, IBuffer buffer)
         {
             var ch = GetCharacteristic(characteristicGuid);
             if (ch != null)
@@ -550,20 +551,14 @@ namespace SensorTag
 
                 if ((properties & GattCharacteristicProperties.Write) != 0)
                 {
-                    DataWriter writer = new DataWriter();
-                    writer.WriteBytes(value);
-                    var buffer = writer.DetachBuffer();
                     var status = await ch.WriteValueAsync(buffer, GattWriteOption.WriteWithResponse);
                     if (status != GattCommunicationStatus.Success)
                     {
                         throw new Exception("Write failed: " + status.ToString());
                     }
                 }
-                else if((properties & GattCharacteristicProperties.WriteWithoutResponse) != 0)
+                else if ((properties & GattCharacteristicProperties.WriteWithoutResponse) != 0)
                 {
-                    DataWriter writer = new DataWriter();
-                    writer.WriteBytes(value);
-                    var buffer = writer.DetachBuffer();
                     var status = await ch.WriteValueAsync(buffer, GattWriteOption.WriteWithoutResponse);
                     if (status != GattCommunicationStatus.Success)
                     {
@@ -579,6 +574,15 @@ namespace SensorTag
             {
                 throw new Exception(string.Format("Characteristic '{0}' not found", characteristicGuid.ToString()));
             }
+        }
+
+
+        public async Task WriteCharacteristicBytes(Guid characteristicGuid, byte[] value)
+        {
+            DataWriter writer = new DataWriter();
+            writer.WriteBytes(value);
+            var buffer = writer.DetachBuffer();
+            await WriteCharacteristicBytes(characteristicGuid, buffer);
         }
 
         public async Task WriteCharacteristicByte(Guid characteristicGuid, byte value)
@@ -616,6 +620,7 @@ namespace SensorTag
                 throw new Exception(string.Format("Characteristic '{0}' not found", characteristicGuid.ToString()));
             }
         }
+
         public async Task<byte[]> ReadCharacteristicBytes(Guid characteristicGuid, BluetoothCacheMode cacheMode)
         {
             var ch = GetCharacteristic(characteristicGuid);
@@ -648,6 +653,35 @@ namespace SensorTag
                 throw new Exception(string.Format("Characteristic '{0}' not found", characteristicGuid.ToString()));
             }
         }
+
+        public async Task<IBuffer> ReadCharacteristicBuffer(Guid characteristicGuid, BluetoothCacheMode cacheMode)
+        {
+            var ch = GetCharacteristic(characteristicGuid);
+            if (ch != null)
+            {
+                var properties = ch.CharacteristicProperties;
+
+                if ((properties & GattCharacteristicProperties.Read) != 0)
+                {
+                    var result = await ch.ReadValueAsync(cacheMode);
+                    var status = result.Status;
+                    if (status != GattCommunicationStatus.Success)
+                    {
+                        throw new Exception("Read failed: " + status.ToString());
+                    }
+                    return result.Value;
+                }
+                else
+                {
+                    throw new Exception(string.Format("Characteristic '{0}' does not support GattCharacteristicProperties.Read"));
+                }
+            }
+            else
+            {
+                throw new Exception(string.Format("Characteristic '{0}' not found", characteristicGuid.ToString()));
+            }
+        }
+
         protected ushort BigEndianUInt16(byte lo, byte hi)
         {
             return (ushort)(((ushort)hi << 8) + (ushort)lo);
@@ -724,12 +758,36 @@ namespace SensorTag
             return (short)(((short)hi << 8) + (short)lo);
         }
 
+        protected ushort ReadBigEndianU16bit(DataReader reader)
+        {
+            byte lo = reader.ReadByte();
+            byte hi = reader.ReadByte();
+            return (ushort)(((ushort)hi << 8) + (ushort)lo);
+        }
+
         protected void WriteBigEndian16bit(DataWriter writer, ushort value)
         {
             byte a = (byte)((value & 0xff00) >> 8);
             byte b = (byte)value;
             writer.WriteByte(b);
             writer.WriteByte(a);
+        }
+
+
+        protected int ReadBigEndian24bit(DataReader reader)
+        {
+            byte lo = reader.ReadByte();
+            byte hi = reader.ReadByte();
+            byte highest = reader.ReadByte();
+            return (int)(((int)highest << 8) + ((int)hi << 8) + (int)lo);
+        }
+
+        protected uint ReadBigEndianU24bit(DataReader reader)
+        {
+            byte lo = reader.ReadByte();
+            byte hi = reader.ReadByte();
+            byte highest = reader.ReadByte();
+            return (uint)(((uint)highest << 16) + ((uint)hi << 8) + (uint)lo);
         }
 
         protected uint ReadBigEndianUint32(DataReader reader)

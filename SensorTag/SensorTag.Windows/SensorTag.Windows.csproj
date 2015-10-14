@@ -136,9 +136,17 @@
       <Link>Pages\IRTemperaturePage.xaml.cs</Link>
       <DependentUpon>IRTemperaturePage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="..\SensorTag\Pages\LightPage.xaml.cs">
+      <Link>Pages\LightPage.xaml.cs</Link>
+      <DependentUpon>LightPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="..\SensorTag\Pages\MagnetometerPage.xaml.cs">
       <Link>Pages\MagnetometerPage.xaml.cs</Link>
       <DependentUpon>MagnetometerPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="..\SensorTag\Pages\MainPanel.xaml.cs">
+      <Link>Pages\MainPanel.xaml.cs</Link>
+      <DependentUpon>MainPanel.xaml</DependentUpon>
     </Compile>
     <Compile Include="..\SensorTag\Pages\PressurePage.xaml.cs">
       <Link>Pages\PressurePage.xaml.cs</Link>
@@ -166,6 +174,7 @@
     <Content Include="Assets\Barometer.png" />
     <Content Include="Assets\Buttons.png" />
     <Content Include="Assets\Compass.png" />
+    <Content Include="Assets\Eye.png" />
     <Content Include="Assets\Gyroscope.png" />
     <Content Include="Assets\Humidity.png" />
     <Content Include="Assets\IRTemperature.png" />
@@ -206,8 +215,18 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="..\SensorTag\Pages\LightPage.xaml">
+      <Link>Pages\LightPage.xaml</Link>
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="..\SensorTag\Pages\MagnetometerPage.xaml">
       <Link>Pages\MagnetometerPage.xaml</Link>
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="..\SensorTag\Pages\MainPanel.xaml">
+      <Link>Pages\MainPanel.xaml</Link>
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

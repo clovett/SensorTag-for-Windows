@@ -108,8 +108,14 @@
     <Compile Include="Pages\HumidityPage.xaml.cs">
       <DependentUpon>HumidityPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\LightPage.xaml.cs">
+      <DependentUpon>LightPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Pages\MagnetometerPage.xaml.cs">
       <DependentUpon>MagnetometerPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\MainPanel.xaml.cs">
+      <DependentUpon>MainPanel.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\PressurePage.xaml.cs">
       <DependentUpon>PressurePage.xaml</DependentUpon>
@@ -126,6 +132,7 @@
     <Content Include="Assets\Barometer.png" />
     <Content Include="Assets\Buttons.png" />
     <Content Include="Assets\Compass.png" />
+    <Content Include="Assets\Eye.png" />
     <Content Include="Assets\Gyroscope.png" />
     <Content Include="Assets\Humidity.png" />
     <Content Include="Assets\IRTemperature.png" />
@@ -171,9 +178,17 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Pages\LightPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Pages\MagnetometerPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\MainPanel.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Pages\PressurePage.xaml">
       <SubType>Designer</SubType>

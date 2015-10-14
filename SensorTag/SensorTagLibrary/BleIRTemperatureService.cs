@@ -182,11 +182,6 @@ namespace SensorTag
                 }
             }
         }
-
-        internal double GetObjectTemperature(double dieDemp, short twoByteValue)
-        {
-
-        }
     }
 
 

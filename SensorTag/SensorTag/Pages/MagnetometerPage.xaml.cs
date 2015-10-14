@@ -45,8 +45,16 @@ namespace SensorTag.Pages
             ShowMessage("Connecting...");
             try
             {
-                await sensor.Magnetometer.StartReading();
-                sensor.Magnetometer.MagnetometerMeasurementValueChanged += Magnetometer_MagnetometerMeasurementValueChanged;
+                if (sensor.Version == 1)
+                {
+                    await sensor.Magnetometer.StartReading();
+                    sensor.Magnetometer.MagnetometerMeasurementValueChanged += Magnetometer_MagnetometerMeasurementValueChanged;
+                }
+                else if (sensor.Version == 2)
+                {
+                    await sensor.Movement.StartReading(MovementFlags.Mag);
+                    sensor.Movement.MovementMeasurementValueChanged += OnMovementMeasurementValueChanged;
+                }
                 ShowMessage("");
             }
             catch (Exception ex) {
@@ -66,16 +74,38 @@ namespace SensorTag.Pages
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
-            sensor.Magnetometer.MagnetometerMeasurementValueChanged -= Magnetometer_MagnetometerMeasurementValueChanged;
+            if (sensor.Magnetometer != null)
+            {
+                sensor.Magnetometer.MagnetometerMeasurementValueChanged -= Magnetometer_MagnetometerMeasurementValueChanged;
+            }
+            else if (sensor.Movement != null)
+            {
+                sensor.Movement.MovementMeasurementValueChanged -= OnMovementMeasurementValueChanged;
+            }
             //await sensor.Barometer.StopReading();
+
+            StopTimer();
         }
 
         MagnetometerMeasurement measurement;
+        MovementMeasurement movement;
 
         void Magnetometer_MagnetometerMeasurementValueChanged(object sender, MagnetometerMeasurementEventArgs e)
         {
             measurement = e.Measurement;
 
+            if (_timer == null)
+            {
+                var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
+                {
+                    StartTimer();
+                }));
+            }
+        }
+
+        void OnMovementMeasurementValueChanged(object sender, MovementEventArgs e)
+        {
+            movement = e.Measurement;
             if (_timer == null)
             {
                 var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
@@ -95,19 +125,6 @@ namespace SensorTag.Pages
             this.Frame.GoBack();
         }
 
-        public void OnVisibilityChanged(bool visible)
-        {
-            if (visible)
-            {
-                sensor.Magnetometer.MagnetometerMeasurementValueChanged += Magnetometer_MagnetometerMeasurementValueChanged;
-                sensor.Barometer.StartReading();
-            }
-            else
-            {
-                sensor.Magnetometer.MagnetometerMeasurementValueChanged -= Magnetometer_MagnetometerMeasurementValueChanged;
-                sensor.Barometer.StopReading();
-            }
-        }
         private void StartTimer()
         {
             if (_timer == null)
@@ -122,13 +139,30 @@ namespace SensorTag.Pages
         bool animating;
         private void OnTimerTick(object sender, object e)
         {
-            double xAngle = measurement.X * (360 / 30);
+            double x = 0;
+            double y = 0;
+            double z = 0;
+
+            if (measurement != null)
+            {
+                x = measurement.X;
+                y = measurement.Y;
+                z = measurement.Z;
+            }
+            else if (movement != null)
+            {
+                x = movement.MagX;
+                y = movement.MagY;
+                z = movement.MagZ;
+            }
+
+            double xAngle = x * (360 / 30);
             AnimationHelper.BeginAnimation(XCompass, new DoubleAnimation() { Duration = new Duration(TimeSpan.FromMilliseconds(100)), To = xAngle, EnableDependentAnimation = true }, "Angle", null);
 
-            double yAngle = measurement.Y * (360 / 30);
+            double yAngle = y * (360 / 30);
             AnimationHelper.BeginAnimation(YCompass, new DoubleAnimation() { Duration = new Duration(TimeSpan.FromMilliseconds(100)), To = yAngle, EnableDependentAnimation = true }, "Angle", null);
             
-            double zAngle = measurement.Z * (360 / 100);
+            double zAngle = z * (360 / 100);
             AnimationHelper.BeginAnimation(ZCompass, new DoubleAnimation() { Duration = new Duration(TimeSpan.FromMilliseconds(100)), To = zAngle, EnableDependentAnimation = true }, "Angle", null);
 
             if (!animating)
@@ -138,10 +172,40 @@ namespace SensorTag.Pages
                 YAxis.Start();
                 ZAxis.Start();
             }
-            XAxis.SetCurrentValue(measurement.X);
-            YAxis.SetCurrentValue(measurement.Y);
-            ZAxis.SetCurrentValue(measurement.Z);
+            XAxis.SetCurrentValue(x);
+            YAxis.SetCurrentValue(y);
+            ZAxis.SetCurrentValue(z);
 
+        }
+
+        public async void OnVisibilityChanged(bool visible)
+        {
+            if (visible)
+            {
+                if (sensor.Magnetometer != null)
+                {
+                    await sensor.Magnetometer.StartReading();
+                    sensor.Magnetometer.MagnetometerMeasurementValueChanged += Magnetometer_MagnetometerMeasurementValueChanged;
+                }
+                else if (sensor.Movement != null)
+                {
+                    await sensor.Movement.StartReading(MovementFlags.Mag);
+                    sensor.Movement.MovementMeasurementValueChanged += OnMovementMeasurementValueChanged;
+                }
+            }
+            else
+            {
+                if (sensor.Magnetometer != null)
+                {
+                    sensor.Magnetometer.MagnetometerMeasurementValueChanged -= Magnetometer_MagnetometerMeasurementValueChanged;
+                    await sensor.Magnetometer.StopReading();
+                }
+                else if (sensor.Movement != null)
+                {
+                    sensor.Movement.MovementMeasurementValueChanged -= OnMovementMeasurementValueChanged;
+                    await sensor.Movement.StopReading();
+                }
+            }
         }
 
         private void StopTimer()

@@ -20,7 +20,7 @@ namespace SensorTag
     public class BleHumidityService : BleGenericGattService
     {
 
-        public BleHumidityService() 
+        public BleHumidityService()
         {
         }
 
@@ -32,7 +32,10 @@ namespace SensorTag
         static Guid HumidityServiceUuid = Guid.Parse("f000aa20-0451-4000-b000-000000000000");
         static Guid HumidityCharacteristicUuid = Guid.Parse("f000aa21-0451-4000-b000-000000000000");
         static Guid HumidityCharacteristicConfigUuid = Guid.Parse("f000aa22-0451-4000-b000-000000000000");
-        
+
+        // Period is only supported on version 2
+        static Guid HumidityCharacteristicPeriodUuid = Guid.Parse("f000aa23-0451-4000-b000-000000000000");
+
         Delegate _humidityValueChanged;
 
         public event EventHandler<HumidityMeasurementEventArgs> HumidityMeasurementValueChanged
@@ -71,10 +74,7 @@ namespace SensorTag
 
                 if ((properties & GattCharacteristicProperties.Read) != 0)
                 {
-                    var result = await ch.ReadValueAsync();
-                    IBuffer buffer = result.Value;
-                    DataReader reader = DataReader.FromBuffer(buffer);
-                    var value = reader.ReadByte();
+                    byte value = await ReadCharacteristicByte(HumidityCharacteristicConfigUuid, Windows.Devices.Bluetooth.BluetoothCacheMode.Uncached);
                     Debug.WriteLine("Humidity config = " + value);
                     return (int)value;
                 }
@@ -101,7 +101,41 @@ namespace SensorTag
                 await WriteCharacteristicByte(HumidityCharacteristicConfigUuid, 0);
             }
         }
-        
+
+
+        /// <summary>
+        /// Get the rate at which humidity is being polled, in milliseconds.  
+        /// This is only supported on Version 2 of the sensor
+        /// </summary>
+        /// <returns>Returns the value read from the sensor or -1 if something goes wrong.</returns>
+        public async Task<int> GetPeriod()
+        {
+            if (Version == 2)
+            {
+                byte v = await ReadCharacteristicByte(HumidityCharacteristicPeriodUuid, Windows.Devices.Bluetooth.BluetoothCacheMode.Uncached);
+                return (int)(v * 10);
+            }
+            return 1000;
+        }
+
+        /// <summary>
+        /// Set the rate at which humidity is being polled, in milliseconds.  
+        /// </summary>
+        /// <param name="milliseconds">The delay between updates, accurate only to 10ms intervals. Maximum value is 2550.</param>
+        public async Task SetPeriod(int milliseconds)
+        {
+            if (Version == 2)
+            {
+                int delay = milliseconds / 10;
+                byte p = (byte)delay;
+                if (p < 1)
+                {
+                    p = 1;
+                }
+
+                await WriteCharacteristicByte(HumidityCharacteristicPeriodUuid, p);
+            }
+        }
 
         private void OnHumidityMeasurementValueChanged(HumidityMeasurementEventArgs args)
         {
@@ -127,15 +161,25 @@ namespace SensorTag
                     {
                         if (dataLength == 4)
                         {
-                            var data = new byte[dataLength];
-                            reader.ReadBytes(data);
+                            ushort temp = ReadBigEndianU16bit(reader);
+                            ushort humidity = ReadBigEndianU16bit(reader);
 
-                            HumidityMeasurement measurement = new HumidityMeasurement();
+                            var measurement = new HumidityMeasurement();
 
-                            int temp = (int)data[0] + (data[1] << 8); // upper byte is unsigned.
-                            int humidity = (int)data[2] + (data[3] << 8); // upper byte is unsigned.
+                            if (Version == 1)
+                            {
+                                // calculate temperature [deg C] 
+                                measurement.Temperature = -46.85 + (175.72 * (double)temp) / 65536.0;
 
-                            measurement.SetRawTemp(temp);
+                                humidity &= 0xFFFC; // clear bits [1..0] (status bits)
+                                measurement.Humidity = -6.0 + (125.0 * (double)humidity) / 65536.0; // RH= -6 + 125 * SRH/2^16
+                            }
+                            else
+                            {
+                                measurement.Temperature = ((double)temp / 65536.0) * 165 - 40;
+                                measurement.Humidity = ((double)humidity / 65536.0) * 100;
+                            }
+
                             measurement.SetRawHumidity(humidity);
 
                             OnHumidityMeasurementValueChanged(new HumidityMeasurementEventArgs(measurement, eventArgs.Timestamp));
@@ -152,29 +196,23 @@ namespace SensorTag
         /// <summary>
         /// Relative humidity (%RH)
         /// </summary>
-        public double Humidity { get; set;}   
-        
+        public double Humidity { get; set; }
+
         /// <summary>
         /// Temperature in Celcius
         /// </summary>
-        public double Temperature { get; set; }        
-        
+        public double Temperature { get; set; }
+
 
         public HumidityMeasurement()
         {
         }
 
 
-        internal void SetRawTemp(int temp)
-        {
-            // calculate temperature [deg C] 
-            this.Temperature = -46.85 + (175.72 * (double)temp) / 65536.0;
-        }
-
         internal void SetRawHumidity(int humidity)
         {
             humidity &= ~0x0003; // clear bits [1..0] (status bits)
-            this.Humidity = -6.0 + (125.0  * (double)humidity) / 65536.0; // RH= -6 + 125 * SRH/2^16
+            this.Humidity = -6.0 + (125.0 * (double)humidity) / 65536.0; // RH= -6 + 125 * SRH/2^16
         }
     }
 

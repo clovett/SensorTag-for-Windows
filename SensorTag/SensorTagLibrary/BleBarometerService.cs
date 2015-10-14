@@ -33,6 +33,7 @@ namespace SensorTag
         static Guid BarometerServiceUuid = Guid.Parse("f000aa40-0451-4000-b000-000000000000");
         static Guid BarometerCharacteristicUuid = Guid.Parse("f000aa41-0451-4000-b000-000000000000");
         static Guid BarometerCharacteristicConfigUuid = Guid.Parse("f000aa42-0451-4000-b000-000000000000");
+        // Only used on CC2541.
         static Guid BarometerCharacteristicCalibrationUuid = Guid.Parse("f000aa43-0451-4000-b000-000000000000");
         static Guid BarometerCharacteristicPeriodUuid = Guid.Parse("f000aa44-0451-4000-b000-000000000000");
         
@@ -108,16 +109,22 @@ namespace SensorTag
 
         public async Task StartCalibration()
         {
-            await WriteCharacteristicByte(BarometerCharacteristicConfigUuid, 2);
-
-            await ReadCalibration();
+            if (Version == 1)
+            {
+                await WriteCharacteristicByte(BarometerCharacteristicConfigUuid, 2);
+                await ReadCalibration();
+            }
+            else
+            {
+                // Calibration is done in firmware on the CC2650 firmware.
+                if (Calibrated != null)
+                {
+                    Calibrated(this, EventArgs.Empty);
+                }
+            }
         }
 
         public event EventHandler Calibrated;
-
-#if FALSE  
-        
-        // the documentation lies, the baromometer service has no Period characteristic.
 
         /// <summary>
         /// Get the rate at which sensor is being polled, in milliseconds.  
@@ -125,8 +132,12 @@ namespace SensorTag
         /// <returns>Returns the value read from the sensor or -1 if something goes wrong.</returns>
         public async Task<int> GetPeriod()
         {
-            byte v = await ReadCharacteristicByte(BarometerCharacteristicPeriodUuid, Windows.Devices.Bluetooth.BluetoothCacheMode.Uncached);
-            return (int)(v * 10);
+            if (Version > 1)
+            {
+                byte v = await ReadCharacteristicByte(BarometerCharacteristicPeriodUuid, Windows.Devices.Bluetooth.BluetoothCacheMode.Uncached);
+                return (int)(v * 10);
+            }
+            return 1000;
         }
 
         /// <summary>
@@ -136,14 +147,16 @@ namespace SensorTag
         /// <param name="milliseconds">The delay between updates, accurate only to 10ms intervals. </param>
         public async Task SetPeriod(int milliseconds)
         {
-            int delay = milliseconds / 10;
-            if (delay < 0)
+            if (Version > 1)
             {
-                delay = 1;
+                int delay = milliseconds / 10;
+                if (delay < 0)
+                {
+                    delay = 1;
+                }
+                await WriteCharacteristicByte(BarometerCharacteristicPeriodUuid, (byte)delay);
             }
-            await WriteCharacteristicByte(BarometerCharacteristicPeriodUuid, (byte)delay);
         }
-#endif
 
         private void OnBarometerMeasurementValueChanged(BarometerMeasurementEventArgs args)
         {
@@ -169,9 +182,20 @@ namespace SensorTag
                     {
                         if (dataLength == 4)
                         {
+                            // version 1
                             var data = new byte[dataLength];
                             reader.ReadBytes(data);
                             CalcBarometricPressure(eventArgs.Timestamp, data);
+                        }
+                        else if (dataLength == 6)
+                        {
+                            // version 2
+                            uint temp = ReadBigEndianU24bit(reader);
+                            uint pressure = ReadBigEndianU24bit(reader);
+                            BarometerMeasurement measurement = new BarometerMeasurement();
+                            measurement.Temperature = (double)temp / 100.0;
+                            measurement.HectoPascals = (double)pressure / 100.0;
+                            OnBarometerMeasurementValueChanged(new BarometerMeasurementEventArgs(measurement, eventArgs.Timestamp));
                         }
                     }
                 }
@@ -273,6 +297,12 @@ namespace SensorTag
 
     public class BarometerMeasurement
     {
+        /// <summary>
+        /// Temperature reading that comes from Bosch Sensortec BMP280
+        /// </summary>
+        public double Temperature { get; set; }
+
+
         /// <summary>
         /// Barometric pressure (hecto-pascal)
         /// </summary>

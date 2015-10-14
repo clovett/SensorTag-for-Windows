@@ -143,15 +143,11 @@ namespace SensorTag
                     {
                         if (dataLength == 6)
                         {
-                            var data = new byte[dataLength];
-                            reader.ReadBytes(data);
+                            short x = ReadBigEndian16bit(reader);
+                            short y = ReadBigEndian16bit(reader);
+                            short z = ReadBigEndian16bit(reader);
 
                             GyroscopeMeasurement measurement = new GyroscopeMeasurement();
-
-                            int x = (int)data[0] + ((sbyte)data[1] << 8); // upper byte is signed.
-                            int y = (int)data[2] + ((sbyte)data[3] << 8); // upper byte is signed.
-                            int z = (int)data[4] + ((sbyte)data[5] << 8); // upper byte is signed.
-
                             measurement.X = ((double)x * 500.0) / 65536.0;
                             measurement.Y = ((double)y * 500.0) / 65536.0;
                             measurement.Z = ((double)z * 500.0) / 65536.0;

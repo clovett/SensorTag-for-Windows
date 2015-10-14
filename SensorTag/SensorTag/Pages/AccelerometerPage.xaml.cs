@@ -45,9 +45,18 @@ namespace SensorTag.Pages
             ShowMessage("Connecting...");
             try
             {
-                await sensor.Accelerometer.StartReading();
-                sensor.Accelerometer.AccelerometerMeasurementValueChanged += OnAccelerometerMeasurementValueChanged;
-                period = await sensor.Accelerometer.GetPeriod();
+                if (sensor.Version == 1)
+                {
+                    await sensor.Accelerometer.StartReading();
+                    sensor.Accelerometer.AccelerometerMeasurementValueChanged += OnAccelerometerMeasurementValueChanged;
+                    period = await sensor.Accelerometer.GetPeriod();
+                }
+                else if (sensor.Version == 2)
+                {
+                    await sensor.Movement.StartReading(MovementFlags.Accel2G | MovementFlags.AccelX | MovementFlags.AccelY | MovementFlags.AccelZ);
+                    sensor.Movement.MovementMeasurementValueChanged += OnMovementMeasurementValueChanged;
+                    period = await sensor.Movement.GetPeriod();
+                }
                 SetSensitivity(period.Value);
                 ShowMessage("");
             }
@@ -56,6 +65,7 @@ namespace SensorTag.Pages
                 ShowMessage(ex.Message);
             }
         }
+
 
         double GetSensitivity()
         {
@@ -82,15 +92,35 @@ namespace SensorTag.Pages
         {
             StopTimer();
             base.OnNavigatedFrom(e);
-            sensor.Accelerometer.AccelerometerMeasurementValueChanged -= OnAccelerometerMeasurementValueChanged;
+            if (sensor.Accelerometer != null)
+            {
+                sensor.Accelerometer.AccelerometerMeasurementValueChanged -= OnAccelerometerMeasurementValueChanged;
+            }
+            else if (sensor.Movement != null)
+            {
+                sensor.Movement.MovementMeasurementValueChanged -= OnMovementMeasurementValueChanged;
+            }
             //await sensor.Accelerometer.StopReading();
         }
 
         AccelerometerMeasurement measurement;
+        MovementMeasurement movement;
 
         private void OnAccelerometerMeasurementValueChanged(object sender, AccelerometerMeasurementEventArgs e)
         {
             measurement = e.Measurement;
+            if (_timer == null)
+            {
+                var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
+                {
+                    StartTimer();
+                }));
+            }
+        }
+
+        void OnMovementMeasurementValueChanged(object sender, MovementEventArgs e)
+        {
+            movement = e.Measurement;
             if (_timer == null)
             {
                 var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
@@ -140,9 +170,28 @@ namespace SensorTag.Pages
                     YAxis.Start();
                     ZAxis.Start();
                 }
-                XAxis.SetCurrentValue(measurement.X);
-                YAxis.SetCurrentValue(measurement.Y);
-                ZAxis.SetCurrentValue(measurement.Z);
+
+                double x = 0;
+                double y = 0;
+                double z = 0;
+
+                if (measurement != null)
+                {
+                    x = measurement.X;
+                    y = measurement.Y;
+                    z = measurement.Z;
+                }
+                else if (movement != null)
+                {
+                    x = movement.AccelX;
+                    y = movement.AccelY;
+                    z = movement.AccelZ;
+                }
+
+
+                XAxis.SetCurrentValue(x);
+                YAxis.SetCurrentValue(y);
+                ZAxis.SetCurrentValue(z);
 
                 int s = (int)Math.Max(1, GetSensitivity());
 
@@ -164,24 +213,47 @@ namespace SensorTag.Pages
             try
             {
                 Debug.WriteLine("Period=" + period.Value);
-                await sensor.Accelerometer.SetPeriod(period.Value);
+                if (sensor.Accelerometer != null)
+                {
+                    await sensor.Accelerometer.SetPeriod(period.Value);
+                }
+                else if (sensor.Movement != null)
+                {
+                    await sensor.Movement.SetPeriod(period.Value);
+                }
             }
             catch { }
             updatingPeriod = false;
         }
 
 
-        public void OnVisibilityChanged(bool visible)
+        public async void OnVisibilityChanged(bool visible)
         {
             if (visible)
             {
-                sensor.Accelerometer.AccelerometerMeasurementValueChanged += OnAccelerometerMeasurementValueChanged;
-                sensor.Accelerometer.StartReading();
+                if (sensor.Version == 1)
+                {
+                    sensor.Accelerometer.AccelerometerMeasurementValueChanged += OnAccelerometerMeasurementValueChanged;
+                    await sensor.Accelerometer.StartReading();
+                }
+                else if (sensor.Version == 2)
+                {
+                    sensor.Movement.MovementMeasurementValueChanged += OnMovementMeasurementValueChanged;
+                    await sensor.Movement.StartReading(MovementFlags.Accel2G | MovementFlags.AccelX | MovementFlags.AccelY | MovementFlags.AccelZ);
+                }
             }
             else
             {
-                sensor.Accelerometer.AccelerometerMeasurementValueChanged -= OnAccelerometerMeasurementValueChanged;
-                sensor.Accelerometer.StopReading();
+                if (sensor.Version == 1)
+                {
+                    sensor.Accelerometer.AccelerometerMeasurementValueChanged -= OnAccelerometerMeasurementValueChanged;
+                    await sensor.Accelerometer.StopReading();
+                }
+                else if (sensor.Version == 2)
+                {
+                    sensor.Movement.MovementMeasurementValueChanged -= OnMovementMeasurementValueChanged;
+                    await sensor.Movement.StopReading();
+                }
             }
         }
     }

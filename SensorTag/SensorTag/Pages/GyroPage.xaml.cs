@@ -44,13 +44,22 @@ namespace SensorTag.Pages
             try
             {
                 // gives us rotational movement every second
-                await sensor.Gyroscope.StartReading(GyroscopeAxes.XYZ);
-                await sensor.Magnetometer.StartReading();
-                sensor.Gyroscope.GyroscopeMeasurementValueChanged += Gyroscope_GyroscopeMeasurementValueChanged;
+                if (sensor.Gyroscope != null)
+                {
+                    await sensor.Gyroscope.StartReading(GyroscopeAxes.XYZ);
+                    await sensor.Magnetometer.StartReading();
+                    sensor.Gyroscope.GyroscopeMeasurementValueChanged += Gyroscope_GyroscopeMeasurementValueChanged;
 
-                // use the magnetometer for absolute position
-                sensor.Magnetometer.MagnetometerMeasurementValueChanged += Magnetometer_MagnetometerMeasurementValueChanged;
-                sensor.Magnetometer.SetPeriod(100); // fastest reading
+                    // use the magnetometer for absolute position
+                    sensor.Magnetometer.MagnetometerMeasurementValueChanged += Magnetometer_MagnetometerMeasurementValueChanged;
+                    sensor.Magnetometer.SetPeriod(100); // fastest reading
+                }
+                else if (sensor.Movement != null)
+                {
+                    await sensor.Movement.StartReading(MovementFlags.Mag | MovementFlags.GyroX | MovementFlags.GyroY | MovementFlags.GyroZ);
+                    sensor.Movement.MovementMeasurementValueChanged += OnMovementMeasurementValueChanged;
+                    await sensor.Movement.SetPeriod(100); // fast reading
+                }
                 ShowMessage("");
             }
             catch (Exception ex)
@@ -77,8 +86,19 @@ namespace SensorTag.Pages
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            sensor.Gyroscope.GyroscopeMeasurementValueChanged -= Gyroscope_GyroscopeMeasurementValueChanged;
-            //sensor.Gyroscope.StopReading();
+            if (sensor.Gyroscope != null)
+            {
+                sensor.Gyroscope.GyroscopeMeasurementValueChanged -= Gyroscope_GyroscopeMeasurementValueChanged;
+                sensor.Magnetometer.MagnetometerMeasurementValueChanged -= Magnetometer_MagnetometerMeasurementValueChanged;
+                //sensor.Gyroscope.StopReading();
+                sensor.Magnetometer.SetPeriod(1000); // slow reading
+            }
+            else if (sensor.Movement != null)
+            {
+                sensor.Movement.MovementMeasurementValueChanged -= OnMovementMeasurementValueChanged;
+                sensor.Movement.SetPeriod(1000); // slow reading
+            }
+
             StopTimer();
             base.OnNavigatedFrom(e);
         }
@@ -123,6 +143,37 @@ namespace SensorTag.Pages
                 }));
             }
         }
+
+        void OnMovementMeasurementValueChanged(object sender, MovementEventArgs e)
+        {
+            var m = e.Measurement;
+
+            // magnetometer has quite a bit of noise, if the value is less than 5 then chances are the
+            // device is not moving.
+            if (Math.Abs(m.MagX) > MinimumMovement)
+            {
+                rx += m.MagX;
+                speedX = 1d + Math.Min(3, Math.Abs(m.MagX / 10));
+            }
+            if (Math.Abs(m.MagY) > MinimumMovement)
+            {
+                ry += m.MagY;
+                speedY = 1d + Math.Min(3, Math.Abs(m.MagY / 10));
+            }
+            if (Math.Abs(m.MagZ) > MinimumMovement)
+            {
+                rz += m.MagZ;
+                speedZ = 1d + Math.Min(3, Math.Abs(m.MagZ / 10));
+            }
+            if (_timer == null)
+            {
+                var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
+                {
+                    StartTimer();
+                }));
+            }
+        }
+
 
         private void OnGoBack(object sender, RoutedEventArgs e)
         {
@@ -193,17 +244,33 @@ namespace SensorTag.Pages
             }
         }
 
-        public void OnVisibilityChanged(bool visible)
+        public async void OnVisibilityChanged(bool visible)
         {
             if (visible)
             {
-                sensor.Gyroscope.GyroscopeMeasurementValueChanged += Gyroscope_GyroscopeMeasurementValueChanged;
-                sensor.Gyroscope.StartReading(GyroscopeAxes.XYZ);
+                if (sensor.Gyroscope != null)
+                {
+                    await sensor.Gyroscope.StartReading(GyroscopeAxes.XYZ);
+                    sensor.Gyroscope.GyroscopeMeasurementValueChanged += Gyroscope_GyroscopeMeasurementValueChanged;
+                }
+                else if (sensor.Movement != null)
+                {
+                    await sensor.Movement.StartReading(MovementFlags.Mag | MovementFlags.GyroX | MovementFlags.GyroY | MovementFlags.GyroZ);
+                    sensor.Movement.MovementMeasurementValueChanged += OnMovementMeasurementValueChanged;
+                }
             }
             else
             {
-                sensor.Gyroscope.GyroscopeMeasurementValueChanged -= Gyroscope_GyroscopeMeasurementValueChanged;
-                sensor.Gyroscope.StopReading();
+                if (sensor.Gyroscope != null)
+                {
+                    sensor.Gyroscope.GyroscopeMeasurementValueChanged -= Gyroscope_GyroscopeMeasurementValueChanged;
+                    await sensor.Gyroscope.StopReading();
+                } 
+                else if (sensor.Movement != null)
+                {
+                    sensor.Movement.MovementMeasurementValueChanged -= OnMovementMeasurementValueChanged;
+                    await sensor.Movement.StopReading();
+                }
             }
         }
     }
