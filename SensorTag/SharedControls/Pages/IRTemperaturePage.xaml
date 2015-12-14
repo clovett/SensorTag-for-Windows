@@ -87,18 +87,21 @@
 
         <TextBlock x:Name="Message" Grid.Row="4" Margin="3" Foreground="Salmon"
                    TextWrapping="Wrap"/>
-
-        <StackPanel Grid.Row="6" HorizontalAlignment="Center" Orientation="Horizontal">
-            <AppBarToggleButton x:Name="CelciusButton" Click="OnCelciusClick">
-                <AppBarToggleButton.Icon>
-                    <FontIcon Glyph="C"/>
-                </AppBarToggleButton.Icon>
-            </AppBarToggleButton>
-            <AppBarToggleButton x:Name="FahrenheitButton" Click="OnFahrenheitClick">
-                <AppBarToggleButton.Icon>
-                    <FontIcon Glyph="F"/>
-                </AppBarToggleButton.Icon>
-            </AppBarToggleButton>
-        </StackPanel>
+        
+        
     </Grid>
+    <Page.BottomAppBar>
+        <CommandBar>
+            <AppBarToggleButton x:Name="CelciusButton" Click="OnCelciusClick" Label="Celcius">
+                <AppBarToggleButton.Icon>
+                    <FontIcon Glyph="C" FontFamily="Segoe UI" />
+                </AppBarToggleButton.Icon>
+            </AppBarToggleButton>
+            <AppBarToggleButton x:Name="FahrenheitButton" Click="OnFahrenheitClick" Label="Fahrenheit">
+                <AppBarToggleButton.Icon>
+                    <FontIcon Glyph="F" FontFamily="Segoe UI" />
+                </AppBarToggleButton.Icon>
+            </AppBarToggleButton>
+        </CommandBar>
+    </Page.BottomAppBar>
 </Page>
