@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SensorTag", "SensorTag\SensorTag.csproj", "{75E5DCE6-8B90-4358-8D6D-0398550C2A0B}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SensorTag.Windows", "SensorTag.Windows\SensorTag.Windows.csproj", "{B6C91496-F435-49C2-A851-4C8E8D780823}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedControls", "SharedControls\SharedControls.csproj", "{F22119A4-141D-426E-8653-E41599E03099}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SensorTag.Universal", "SensorTag.Universal\SensorTag.Universal.csproj", "{112EB324-9A8B-42B1-AFCD-21B4DFC35727}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -127,6 +129,38 @@ Global
 		{F22119A4-141D-426E-8653-E41599E03099}.Release|Win32.ActiveCfg = Release|Any CPU
 		{F22119A4-141D-426E-8653-E41599E03099}.Release|x64.ActiveCfg = Release|Any CPU
 		{F22119A4-141D-426E-8653-E41599E03099}.Release|x86.ActiveCfg = Release|Any CPU
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Debug|ARM.ActiveCfg = Debug|ARM
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Debug|ARM.Build.0 = Debug|ARM
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Debug|ARM.Deploy.0 = Debug|ARM
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Debug|Mixed Platforms.Deploy.0 = Debug|x86
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Debug|Win32.ActiveCfg = Debug|x86
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Debug|Win32.Build.0 = Debug|x86
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Debug|Win32.Deploy.0 = Debug|x86
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Debug|x64.ActiveCfg = Debug|x64
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Debug|x64.Build.0 = Debug|x64
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Debug|x64.Deploy.0 = Debug|x64
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Debug|x86.ActiveCfg = Debug|x86
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Debug|x86.Build.0 = Debug|x86
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Debug|x86.Deploy.0 = Debug|x86
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Release|Any CPU.ActiveCfg = Release|x86
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Release|ARM.ActiveCfg = Release|ARM
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Release|ARM.Build.0 = Release|ARM
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Release|ARM.Deploy.0 = Release|ARM
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Release|Mixed Platforms.Build.0 = Release|x86
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Release|Mixed Platforms.Deploy.0 = Release|x86
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Release|Win32.ActiveCfg = Release|x86
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Release|Win32.Build.0 = Release|x86
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Release|Win32.Deploy.0 = Release|x86
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Release|x64.ActiveCfg = Release|x64
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Release|x64.Build.0 = Release|x64
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Release|x64.Deploy.0 = Release|x64
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Release|x86.ActiveCfg = Release|x86
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Release|x86.Build.0 = Release|x86
+		{112EB324-9A8B-42B1-AFCD-21B4DFC35727}.Release|x86.Deploy.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
