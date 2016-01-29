@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/2010/manifest" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest">
-  <Identity Name="43906ChrisLovett.SensorTag" Publisher="CN=BC801FCC-0BF8-49D7-9F51-1B625C3BE476" Version="1.2.0.5" />
+  <Identity Name="43906ChrisLovett.SensorTag" Publisher="CN=BC801FCC-0BF8-49D7-9F51-1B625C3BE476" Version="1.2.0.6" />
   <Properties>
     <DisplayName>SensorTag</DisplayName>
     <PublisherDisplayName>Chris Lovett</PublisherDisplayName>

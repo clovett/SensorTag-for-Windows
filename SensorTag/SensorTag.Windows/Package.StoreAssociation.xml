@@ -373,12 +373,13 @@
     <MainPackageIdentityName>43906ChrisLovett.SecurePasswordVault</MainPackageIdentityName>
     <MainPackageIdentityName>43906ChrisLovett.SeismographTablet</MainPackageIdentityName>
     <MainPackageIdentityName>43906ChrisLovett.Sensay</MainPackageIdentityName>
+    <MainPackageIdentityName>43906ChrisLovett.TimesTablesSpeedTest</MainPackageIdentityName>
   </AccountPackageIdentityNames>
   <PackageInfoList LandingUrl="https://dev.windows.com/dashboard/Application?appId=9NBLGGH0MQ6H">
     <PackageInfo>
       <OsMinVersion>6.3.0.0</OsMinVersion>
       <PackageArchitecture>neutral</PackageArchitecture>
-      <PackageMaxArchitectureVersion>1.2.0.1</PackageMaxArchitectureVersion>
+      <PackageMaxArchitectureVersion>1.2.0.5</PackageMaxArchitectureVersion>
     </PackageInfo>
   </PackageInfoList>
 </StoreAssociation>

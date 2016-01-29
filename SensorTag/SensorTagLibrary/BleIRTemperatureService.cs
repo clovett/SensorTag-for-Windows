@@ -136,33 +136,42 @@ namespace SensorTag
                             reader.ReadBytes(data);
 
                             IRTemperatureMeasurement measurement = new IRTemperatureMeasurement();
-                            ushort objTemp = (ushort)(data[0] + (data[1] << 8));
-                            ushort dieTemp = (ushort)(data[2] + (data[3] << 8));
+                            short objTemp = (short)((short)data[0] + (short)(data[1] << 8));
+                            short dieTemp = (short)((short)data[2] + (short)(data[3] << 8));
 
                             if (Version == 1)
                             {
+                                // This algorithm comes from http://www.ti.com/product/tmp006
                                 measurement.DieTemperature = dieTemp / 128.0;
 
                                 double Vobj2 = (double)objTemp;
 
-                                Vobj2 *= 0.00000015625;
+                                Vobj2 *= 156.25E-9; // Voltage in the sensor
 
-                                double Tdie = measurement.DieTemperature + 273.15;
 
-                                double S0 = 7E-14;	// Calibration factor: todo: this factor needs to be computed via calibration step.
-                                double a1 = 1.75E-3;
+                                double toKelvin = 273.15;
+                                double Tdie = measurement.DieTemperature + toKelvin;
+
+                                double S0 = 6.4E-14;	// Default value based on black body with ε = 0.95, and 110° FOV.
+                                double a1 = 1.75E-3;    // Default values based on typical sensor characteristics
                                 double a2 = -1.678E-5;
                                 double b0 = -2.94E-5;
-                                double b1 = -5.7E-7;
+                                double b1 = -5.7E-7;    // Calibrate in end-application environment
                                 double b2 = 4.63E-9;
                                 double c2 = 13.4;
                                 double Tref = 298.15;
+                                // compute the sensitivity of the thermopile sensor and how it changes over temperature
                                 double S = S0 * (1 + a1 * (Tdie - Tref) + a2 * Math.Pow((Tdie - Tref), 2));
+                                // offset voltage that arises because of the slight self-heating of the TMP006 chip
                                 double Vos = b0 + b1 * (Tdie - Tref) + b2 * Math.Pow((Tdie - Tref), 2);
+                                // models the Seebeck coefficients of the thermopile and how these coefficients change over temperature.
                                 double fObj = (Vobj2 - Vos) + c2 * Math.Pow((Vobj2 - Vos), 2);
+                                // computes the radiant transfer of IR energy between the target object and the TMP006 chip
+                                // and the conducted heat in the thermopile in the TMP006.
                                 double tObj = Math.Pow(Math.Pow(Tdie, 4) + (fObj / S), .25);
 
-                                measurement.ObjectTemperature = (tObj - 273.15);
+                                // back to celcius
+                                measurement.ObjectTemperature = (tObj - toKelvin);
                             }
                             else
                             {

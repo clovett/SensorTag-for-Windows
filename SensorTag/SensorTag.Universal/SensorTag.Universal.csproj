@@ -18,7 +18,7 @@
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <PackageCertificateKeyFile>SensorTag.Universal_StoreKey.pfx</PackageCertificateKeyFile>
-    <PackageCertificateThumbprint>1FACADA2DD3A54801A8B963DAC494229398516AF</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>E3AE44BB6FE1E85649B2AAF331E8054C567C2412</PackageCertificateThumbprint>
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
     <AppxBundle>Always</AppxBundle>
     <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
@@ -98,6 +98,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="project.json" />
+    <None Include="SensorTag.Universal_StoreKey.pfx" />
+    <None Include="SensorTag.Universal_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App.xaml.cs">
@@ -112,8 +114,6 @@
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
-    <None Include="SensorTag.Universal_StoreKey.pfx" />
-    <None Include="SensorTag.Universal_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\Accelerometer.png" />
