@@ -146,7 +146,14 @@ namespace SensorTag
                     
                     await ConnectHumidityService();
                     if (disconnecting) return false;
-                    await ConnectBarometerService();
+                    try
+                    {
+                        await ConnectBarometerService();
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine("Calibration failed: {0}", ex.Message);
+                    }
                     if (disconnecting) return false;
 
                     // Version 1 only

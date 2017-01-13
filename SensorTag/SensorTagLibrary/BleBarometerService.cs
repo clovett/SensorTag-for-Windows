@@ -111,8 +111,8 @@ namespace SensorTag
         {
             if (Version == 1)
             {
-                await WriteCharacteristicByte(BarometerCharacteristicConfigUuid, 2);
-                await ReadCalibration();
+                await WriteCharacteristicByte(BarometerCharacteristicConfigUuid, 2);                
+                await ReadCalibration();                
             }
             else
             {

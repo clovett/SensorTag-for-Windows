@@ -59,8 +59,16 @@
             <c:ScrollingGraph x:Name="YAxis" Grid.Row="2" StrokeThickness="2" Stroke="Green"/>
             <c:ScrollingGraph x:Name="ZAxis" Grid.Row="3" StrokeThickness="2" Stroke="LightBlue"/>
         </Grid>
-        
-        <TextBlock x:Name="Message" Grid.Row="2" Margin="3" Foreground="Salmon"
+        <Grid Grid.Row="2" >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock x:Name="Message" Margin="3" Foreground="Salmon"
                    TextWrapping="Wrap"/>
+            
+            <TextBlock x:Name="MsgPerSec" Grid.Column="1" Margin="3" Foreground="Green"
+                   TextWrapping="NoWrap"/>
+        </Grid>
     </Grid>
 </Page>

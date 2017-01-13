@@ -27,6 +27,8 @@ namespace SensorTag.Pages
         SensorTag sensor;
         DispatcherTimer _timer;
         int? period;
+        long msgCount;
+        Stopwatch watch = new Stopwatch();
 
         public AccelerometerPage()
         {
@@ -47,6 +49,8 @@ namespace SensorTag.Pages
             {
                 if (sensor.Version == 1)
                 {
+                    // the older CC2541 complains if you sent the minimum to less than 100 ms.
+                    SensitivitySlider.Minimum = 100;
                     await sensor.Accelerometer.StartReading();
                     sensor.Accelerometer.AccelerometerMeasurementValueChanged += OnAccelerometerMeasurementValueChanged;
                     period = await sensor.Accelerometer.GetPeriod();
@@ -59,6 +63,7 @@ namespace SensorTag.Pages
                 }
                 SetSensitivity(period.Value);
                 ShowMessage("");
+                watch.Restart();
             }
             catch (Exception ex)
             {
@@ -109,6 +114,7 @@ namespace SensorTag.Pages
         private void OnAccelerometerMeasurementValueChanged(object sender, AccelerometerMeasurementEventArgs e)
         {
             measurement = e.Measurement;
+            msgCount++;
             if (_timer == null)
             {
                 var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
@@ -121,6 +127,7 @@ namespace SensorTag.Pages
         void OnMovementMeasurementValueChanged(object sender, MovementEventArgs e)
         {
             movement = e.Measurement;
+            msgCount++;
             if (_timer == null)
             {
                 var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
@@ -202,6 +209,9 @@ namespace SensorTag.Pages
                     Task.Run(new Action(UpdatePeriod));
                 }
 
+                double seconds = (double)watch.ElapsedMilliseconds / 1000.0;
+                double rate = msgCount / seconds;
+                MsgPerSec.Text = string.Format("{0:N0} m/s", rate);
             }
             catch (Exception)
             {
@@ -221,6 +231,8 @@ namespace SensorTag.Pages
                 {
                     await sensor.Movement.SetPeriod(period.Value);
                 }
+                msgCount = 0;
+                watch.Restart();
             }
             catch { }
             updatingPeriod = false;
